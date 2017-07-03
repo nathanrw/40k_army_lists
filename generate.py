@@ -13,7 +13,7 @@ def read_models():
         def __init__(self, name, cost):
             self.name = name
             self.cost = cost
-    with open("models.csv") as csvfile:
+    with open("data/models.csv") as csvfile:
         reader = csv.DictReader(csvfile)
         for row in reader:
             models[row["Name"]] = Model(row["Name"], int(row["Cost"]))
@@ -26,7 +26,7 @@ def read_weapons():
         def __init__(self, name , cost):
             self.name = name
             self.cost = cost
-    with open("weapons.csv") as csvfile:
+    with open("data/weapons.csv") as csvfile:
         reader = csv.DictReader(csvfile)
         for row in reader:
             weapons[row["Name"]] = Weapon(row["Name"], int(row["Cost"]))
@@ -39,7 +39,7 @@ def read_formations():
         def __init__(self, name , cp):
             self.name = name
             self.cp = cp
-    with open("formations.csv") as csvfile:
+    with open("data/formations.csv") as csvfile:
         reader = csv.DictReader(csvfile)
         for row in reader:
             formations[row["Name"]] = Formation(row["Name"], int(row["CP"]))
