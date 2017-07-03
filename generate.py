@@ -80,10 +80,10 @@ def write_army_file(out_dir, army):
         limit = army["Points"]
         warlord = army["Warlord"]
         outfile.write("<h1>%s</h1>\n" % army_name)
-        outfile.write("<ul>\n")
-        outfile.write("<li>Warlord: %s</li>\n" % warlord)
-        outfile.write("<li>Points limit: %s</li>\n" % limit)
-        outfile.write("</ul>\n")
+        outfile.write("<table>\n")
+        outfile.write("<tr><td>Warlord</td><td>%s</td></tr>\n" % warlord)
+        outfile.write("<tr><td>Points limit</td><td>%s</td></tr>\n" % limit)
+        outfile.write("</table>\n")
         total = 0
         cp_total = 0
         for detachment in army["Detachments"]:
