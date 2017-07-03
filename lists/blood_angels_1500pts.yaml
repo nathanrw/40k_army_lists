@@ -1,0 +1,38 @@
+Name: 1500pt Army
+Warlord: Chaplain
+Points: 1500
+Detachments:
+  - Name: 1500pt patrol
+    Type: Patrol
+    Units:
+      - Name: Tactical Squad
+        Items:
+          Tactical Marine: 10
+          Flamer: 1
+          Missile Launcher: 1
+      - Name: Rhino
+        Items:
+          Rhino: 1
+          Storm Bolter: 1
+      - Name: Death Company
+        Items:
+          Death Company (Jump Pack): 10
+      - Name: Chaplain
+        Items:
+          Chaplain (Jump Pack): 1
+      - Name: Librarian
+        Items:
+          Librarian (Terminator Armour): 1
+          Force Axe: 1
+          Storm Bolter: 1
+      - Name: Terminators
+        Items:
+          Terminator: 10
+          Power Fist: 9
+          Power Sword: 1
+          Storm Bolter: 10
+      - Name: Baal Predator
+        Items:
+          Baal Predator: 1
+          Twin Assault Cannon: 1
+          Heavy Flamer: 2

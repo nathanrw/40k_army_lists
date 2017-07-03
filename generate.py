@@ -4,6 +4,7 @@ import sys
 import csv
 import shutil
 import os
+import yaml
 
 def read_models():
     """ Read all of the models into a table. """
@@ -50,234 +51,6 @@ COSTS.update(read_weapons())
 
 FORMATIONS = read_formations()
 
-AL_1000PT = {
-    "Name": "1000pt Army",
-    "Warlord": "Chaplain",
-    "Points": 1000,
-    "Detachments": [
-        {
-            "Name": "Patrol",
-            "Type": "Patrol",
-            "Units": [
-                (
-                    "Tactical Squad",
-                    [
-                        ("Tactical Marine", 10),
-                        ("Flamer", 1),
-                        ("Missile Launcher", 1)
-                    ]
-                ),
-                (
-                    "Rhino",
-                    [
-                        ("Rhino", 1),
-                        ("Storm Bolter", 2)
-                    ]
-                ),
-                (
-                    "Death Company",
-                    [
-                        ("Death Company (Jump Pack)", 10)
-                    ]
-                ),
-                (
-                    "Chaplain",
-                    [
-                        ("Chaplain (Jump Pack)", 1)
-                    ]
-                ),
-                (
-                    "Librarian",
-                    [
-                        ("Librarian (Terminator Armour)", 1),
-                        ("Force Axe", 1),
-                        ("Storm Bolter", 1)
-                    ]
-                ),
-                (
-                    "Terminators",
-                    [
-                        ("Terminator", 5),
-                        ("Power Fist", 4),
-                        ("Power Sword", 1),
-                        ("Storm Bolter", 5)
-                    ]
-                )
-            ]
-        }
-    ]
-}
-
-
-AL_1500PT = {
-    "Name": "1500pt Army",
-    "Warlord": "Chaplain",
-    "Points": 1500,
-    "Detachments": [
-        {
-            "Name": "1500pt patrol",
-            "Type": "Patrol",
-            "Units": [
-                (
-                    "Tactical Squad",
-                    [
-                        ("Tactical Marine", 10),
-                        ("Flamer", 1),
-                        ("Missile Launcher", 1)
-                    ]
-                ),
-                (
-                    "Rhino",
-                    [
-                        ("Rhino", 1),
-                        ("Storm Bolter", 2)
-                    ]
-                ),
-                (
-                    "Death Company",
-                    [
-                        ("Death Company (Jump Pack)", 10)
-                    ]
-                ),
-                (
-                    "Chaplain",
-                    [
-                        ("Chaplain (Jump Pack)", 1)
-                    ]
-                ),
-                (
-                    "Librarian",
-                    [
-                        ("Librarian (Terminator Armour)", 1),
-                        ("Force Axe", 1),
-                        ("Storm Bolter", 1)
-                    ]
-                ),
-                (
-                    "Terminators",
-                    [
-                        ("Terminator", 10),
-                        ("Power Fist", 9),
-                        ("Power Sword", 1),
-                        ("Storm Bolter", 10)
-                    ]
-                ),
-                (
-                    "Baal Predator",
-                    [
-                        ("Baal Predator", 1),
-                        ("Twin Assault Cannon", 1),
-                        ("Heavy Flamer", 2)
-                    ]
-                )
-            ]
-        }
-    ]
-}
-
-AL_2000PT = {
-    "Name": "2000pt Army",
-    "Warlord": "Tycho",
-    "Points": 2000,
-    "Detachments": [
-        {
-            "Name": "Battalion",
-            "Type": "Battalion",
-            "Units": [
-                (
-                    "Tactical Squad 1",
-                    [
-                        ("Tactical Marine", 10),
-                        ("Flamer", 1),
-                        ("Missile Launcher", 1)
-                    ]
-                ),
-                (
-                    "Rhino 1",
-                    [
-                        ("Rhino", 1),
-                        ("Storm Bolter", 2)
-                    ]
-                ),
-                (
-                    "Tactical Squad 2",
-                    [
-                        ("Tactical Marine", 10),
-                        ("Flamer", 1),
-                        ("Missile Launcher", 1)
-                    ]
-                ),
-                (
-                    "Rhino 2",
-                    [
-                        ("Rhino", 1),
-                        ("Storm Bolter", 2)
-                    ]
-                ),
-                (
-                    "Scouts",
-                    [
-                        ("Scout Marine", 5),
-                        ("Sniper Rifle", 2)
-                    ]
-                ),
-                (
-                    "Death Company",
-                    [
-                        ("Death Company (Jump Pack)", 10)
-                    ]
-                ),
-                (
-                    "Chaplain",
-                    [
-                        ("Chaplain (Jump Pack)", 1)
-                    ]
-                ),
-                (
-                    "Librarian",
-                    [
-                        ("Librarian (Terminator Armour)", 1),
-                        ("Force Axe", 1),
-                        ("Storm Bolter", 1)
-                    ]
-                ),
-                (
-                    "Tycho",
-                    [
-                        ("Captain Tycho", 1)
-                    ]
-                ),
-                (
-                    "Terminators",
-                    [
-                        ("Terminator", 10),
-                        ("Power Fist", 9),
-                        ("Power Sword", 1),
-                        ("Storm Bolter", 10)
-                    ]
-                ),
-                (
-                    "Furioso Dreadnaught",
-                    [
-                        ("Furioso Dreadnaught", 1),
-                        ("Furioso Fist (Pair)", 1),
-                        ("Meltagun", 1),
-                        ("Storm Bolter", 1)
-                    ]
-                ),
-                (
-                    "Baal Predator",
-                    [
-                        ("Baal Predator", 1),
-                        ("Twin Assault Cannon", 1),
-                        ("Heavy Flamer", 2)
-                    ]
-                )
-            ]
-        }
-    ]
-}
-
 def lookup_cost(item):
     try:
         return COSTS[item].cost
@@ -315,12 +88,12 @@ def write_army_file(out_dir, army):
             cp_total += cp
             for squad in detachment["Units"]:
                 squad_total = 0
-                name = squad[0]
-                for item in squad[1]:
-                    squad_total += lookup_cost(item[0]) * item[1]
+                name = squad["Name"]
+                for item in squad["Items"].keys():
+                    squad_total += lookup_cost(item) * squad["Items"][item]
                 outfile.write("%s (%spts)\n" % (name, squad_total))
-                for item in squad[1]:
-                    outfile.write("  %s (%sx%spts)\n" % (item[0], item[1], lookup_cost(item[0])))
+                for item in squad["Items"]:
+                    outfile.write("  %s (%sx%spts)\n" % (item, squad["Items"][item], lookup_cost(item)))
                 total += squad_total
                 outfile.write("\n")
         outfile.write("Totals\n")
@@ -330,10 +103,18 @@ def write_army_file(out_dir, army):
         outfile.write("\n")
     return filename
 
+def read_armies(dirname):
+    """ Read the army data into dicts. """
+    armies = []
+    for filename in os.listdir(dirname):
+        with open(os.path.join("lists", filename), "r") as infile:
+            armies.append(yaml.load(infile))
+    return armies
+
 def main():
 
     # The army lists.
-    armies = [AL_1000PT, AL_1500PT, AL_2000PT]
+    armies = read_armies("lists")
 
     # Create the necessary directory structure.
     shutil.rmtree("html", True)
