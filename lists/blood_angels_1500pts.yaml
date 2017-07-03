@@ -1,4 +1,4 @@
-Name: 1500pt Army
+Name: Blood Angels 1500pts
 Warlord: Chaplain
 Points: 1500
 Detachments:
@@ -6,32 +6,39 @@ Detachments:
     Type: Patrol
     Units:
       - Name: Tactical Squad
+        Slot: Troops
         Items:
           Tactical Marine: 10
           Flamer: 1
           Missile Launcher: 1
       - Name: Rhino
+        Slot: Transports
         Items:
           Rhino: 1
           Storm Bolter: 1
       - Name: Death Company
+        Slot: Elites
         Items:
           Death Company (Jump Pack): 10
       - Name: Chaplain
+        Slot: HQ
         Items:
           Chaplain (Jump Pack): 1
       - Name: Librarian
+        Slot: HQ
         Items:
           Librarian (Terminator Armour): 1
           Force Axe: 1
           Storm Bolter: 1
       - Name: Terminators
+        Slot: Elites
         Items:
           Terminator: 10
           Power Fist: 9
           Power Sword: 1
           Storm Bolter: 10
       - Name: Baal Predator
+        Slot: Heavy Support
         Items:
           Baal Predator: 1
           Twin Assault Cannon: 1
