@@ -137,6 +137,16 @@ def write_force_organisation_chart(outfile, detachment):
     """ Write the force organisation chart for the detachment. """
     outfile.write("<table>\n")
 
+    outfile.write("<tr>\n")
+    outfile.write("<th colspan='6'>%s</th>\n" % detachment["Name"])
+    outfile.write("</tr>\n")
+    outfile.write("<tr>\n")
+    outfile.write("<th>Type</th>\n")
+    outfile.write("<td colspan='2'>%s</td>\n" % detachment["Type"])
+    outfile.write("<th>CP</th>\n")
+    outfile.write("<td colspan='2'>%s</td>\n" % lookup_formation(detachment["Type"]).cp)
+    outfile.write("</tr>\n")
+
     # Write the column header. Note that transports are handled as a special
     # case.
     outfile.write("<tr>\n")
