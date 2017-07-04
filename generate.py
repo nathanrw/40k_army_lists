@@ -126,11 +126,11 @@ def write_army_header(outfile, army):
     warlord = army["Warlord"]
     outfile.write("<h1>%s</h1>\n" % army_name)
     outfile.write("<table>\n")
-    outfile.write("<tr><td>Warlord</td><td>%s</td></tr>\n" % warlord)
-    outfile.write("<tr><td>Points limit</td><td>%s</td></tr>\n" % limit)
-    outfile.write("<tr><td>Points total</td><td>%s</td></tr>\n" % total)
-    outfile.write("<tr><td>Points to spare</td><td>%s</td></tr>\n" % (limit - total))
-    outfile.write("<tr><td>CP</td><td>%s</td></tr>\n" % cp_total)
+    outfile.write("<tr><th>Warlord</th><td>%s</td></tr>\n" % warlord)
+    outfile.write("<tr><th>Points limit</th><td>%s</td></tr>\n" % limit)
+    outfile.write("<tr><th>Points total</th><td>%s</td></tr>\n" % total)
+    outfile.write("<tr><th>Points to spare</th><td>%s</td></tr>\n" % (limit - total))
+    outfile.write("<tr><th>CP</td><td>%s</th></tr>\n" % cp_total)
     outfile.write("</table>\n")
 
 def write_force_organisation_chart(outfile, detachment):
@@ -142,8 +142,8 @@ def write_force_organisation_chart(outfile, detachment):
     outfile.write("<tr>\n")
     formation = lookup_formation(detachment["Type"])
     for slot in formation.slots:
-        outfile.write("<td>%s</td>\n" % slot)
-    outfile.write("<td>Transports</td>\n")
+        outfile.write("<th>%s</th>\n" % slot)
+    outfile.write("<th>Transports</th>\n")
     outfile.write("</tr>\n")
 
     # Write the slot totals and limits.
@@ -221,6 +221,9 @@ def write_army_file(out_dir, army):
 
         # Start of HTML file.
         outfile.write("<html>\n")
+        outfile.write("<head>\n")
+        outfile.write("<link rel='stylesheet' type='text/css' href='../style.css'/>")
+        outfile.write("</head>\n")
         outfile.write("<body>\n")
 
         # Output totals and army info.
@@ -255,10 +258,14 @@ def main():
     os.mkdir("html")
     os.chdir("html")
     os.mkdir("lists")
+    shutil.copy("../style/style.css", "style.css")
 
     # Write out each army and list it in the index file.
     with open("index.html", "w") as outfile:
         outfile.write("<html>\n")
+        outfile.write("<head>\n")
+        outfile.write("<link rel='stylesheet' type='text/css' href='style.css'/>")
+        outfile.write("</head>\n")
         outfile.write("<body>\n")
         outfile.write("<h1> Army Lists </h1>\n")
         outfile.write("<ul>\n")
