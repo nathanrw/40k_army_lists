@@ -1,11 +1,19 @@
-body {
-}
-
 table {
     border-collapse: collapse;
+    margin: 10;
 }
 
 td, th {
     border: 1px solid #000000;
     padding: 10px;
+}
+
+.title {
+    background-color: #000000;
+    color: #ffffff;
+}
+
+.detachment {
+    border: 5px dashed #cecece;
+    padding: 20px;
 }

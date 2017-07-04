@@ -117,15 +117,17 @@ def army_cp_total(army):
         total += formation.cp
     return total
 
-def write_army_header(outfile, army):
+def write_army_header(outfile, army, link=None):
     """ Write the army header. """
     army_name = army["Name"]
+    if link is not None:
+        army_name = "<a href='%s'>%s</a>" % (link, army_name)
     limit = army["Points"]
     total = army_points_cost(army)
     cp_total = army_cp_total(army)
     warlord = army["Warlord"]
-    outfile.write("<h1>%s</h1>\n" % army_name)
     outfile.write("<table>\n")
+    outfile.write("<tr><th colspan='2' class='title'>%s</th></tr>\n" % army_name)
     outfile.write("<tr><th>Warlord</th><td>%s</td></tr>\n" % warlord)
     outfile.write("<tr><th>Points limit</th><td>%s</td></tr>\n" % limit)
     outfile.write("<tr><th>Points total</th><td>%s</td></tr>\n" % total)
@@ -135,16 +137,18 @@ def write_army_header(outfile, army):
 
 def write_force_organisation_chart(outfile, detachment):
     """ Write the force organisation chart for the detachment. """
-    outfile.write("<table>\n")
 
+    outfile.write("<table>\n")
     outfile.write("<tr>\n")
-    outfile.write("<th colspan='6'>%s</th>\n" % detachment["Name"])
+    outfile.write("<th colspan='6' class='title'>%s</th>\n" % detachment["Name"])
     outfile.write("</tr>\n")
     outfile.write("<tr>\n")
     outfile.write("<th>Type</th>\n")
-    outfile.write("<td colspan='2'>%s</td>\n" % detachment["Type"])
+    outfile.write("<td colspan='1'>%s</td>\n" % detachment["Type"])
     outfile.write("<th>CP</th>\n")
-    outfile.write("<td colspan='2'>%s</td>\n" % lookup_formation(detachment["Type"]).cp)
+    outfile.write("<td colspan='1'>%s</td>\n" % lookup_formation(detachment["Type"]).cp)
+    outfile.write("<th>Cost</th>\n")
+    outfile.write("<td colspan='1'>%s</td>\n" % detachment_points_cost(detachment))
     outfile.write("</tr>\n")
 
     # Write the column header. Note that transports are handled as a special
@@ -183,38 +187,47 @@ def write_force_organisation_chart(outfile, detachment):
 def write_detachment(outfile, detachment):
     """ Write a detachment. """
 
-    # Get the formation info and update cp count.
-    formation = lookup_formation(detachment["Type"])
-    cp = formation.cp
-
-    # Write out the detachment title.
-    title = "%s (%s) (%sCP)" % (detachment["Name"], detachment["Type"], cp)
-    outfile.write("<h2>%s</h2>\n" % title)
-
     # Write out the table of force organisation slots
     write_force_organisation_chart(outfile, detachment)
 
     # Write out each squad.
+    outfile.write("<div class='detachment'>\n")
     for squad in detachment["Units"]:
         write_squad(outfile, squad)
+    outfile.write("</div'>\n")
 
 def write_squad(outfile, squad):
     """ Write out the cost breakdown for a squad. """
 
     # Squad name and total cost.
-    squad_total = squad_points_cost(squad)
-    name = squad["Name"]
-    outfile.write("<h3>%s [%s] (%spts)</h3>\n" %
-                  (name, squad["Slot"], squad_total))
+    outfile.write("<table>\n")
+    outfile.write("<tr>\n")
+    outfile.write("<th colspan='4' class='title'>%s</th>\n" % squad["Name"])
+    outfile.write("</tr>\n")
+    outfile.write("<tr>\n")
+    outfile.write("<th>Slot</th>\n")
+    outfile.write("<td>%s</td>\n" % squad["Slot"])
+    outfile.write("<th>Cost</th>\n")
+    outfile.write("<td>%s</td>\n" % squad_points_cost(squad))
+    outfile.write("</tr>\n")
+    outfile.write("<tr>\n")
+    outfile.write("<th colspan='2'>Item</th>\n")
+    outfile.write("<th>Unit Cost</th>\n")
+    outfile.write("<th>Quantity</th>\n")
+    outfile.write("</tr>\n")
 
     # List each item with cost and quantity.
-    outfile.write("<ul>\n")
     for item in squad["Items"]:
+        outfile.write("<tr>\n")
         quantity = squad["Items"][item]
         cost = lookup_item(item).cost
-        outfile.write("<li>%s (%sx%spts)</li>\n" %
-                      (item, quantity, cost))
-    outfile.write("</ul>\n")
+        outfile.write("<td colspan='2'>%s</td>\n" % item)
+        outfile.write("<td>%s</td>\n" % cost)
+        outfile.write("<td>%s</td>\n" % quantity)
+        outfile.write("</tr>\n")
+
+    # Done with the table.
+    outfile.write("</table>\n")
 
 def write_army_file(out_dir, army):
     """ Process a single army. """
@@ -232,16 +245,21 @@ def write_army_file(out_dir, army):
         # Start of HTML file.
         outfile.write("<html>\n")
         outfile.write("<head>\n")
-        outfile.write("<link rel='stylesheet' type='text/css' href='../style.css'/>")
+        outfile.write("<link rel='stylesheet' type='text/css' href='../style.css'/>\n")
         outfile.write("</head>\n")
         outfile.write("<body>\n")
+
+        # Link back to index.
+        outfile.write("<a href='../index.html'>Back</a>\n")
 
         # Output totals and army info.
         write_army_header(outfile, army)
 
         # Output breakdown for each detachment.
+        outfile.write("<div class='army'>\n")
         for detachment in army["Detachments"]:
             write_detachment(outfile, detachment)
+        outfile.write("</div>\n")
 
         # End of HTML file.
         outfile.write("</body>\n")
@@ -278,11 +296,9 @@ def main():
         outfile.write("</head>\n")
         outfile.write("<body>\n")
         outfile.write("<h1> Army Lists </h1>\n")
-        outfile.write("<ul>\n")
         for army in armies:
             filename = write_army_file("lists", army)
-            outfile.write("<li><a href=\"%s\">%s</a></li>\n" % (filename, army["Name"]))
-        outfile.write("</ul>\n")
+            write_army_header(outfile, army, filename)
         outfile.write("</body>\n")
         outfile.write("</html>\n")
 
