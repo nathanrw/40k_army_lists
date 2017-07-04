@@ -117,6 +117,16 @@ def army_cp_total(army):
         total += formation.cp
     return total
 
+def list_army_weapons(army):
+    """ List all of the weapons in the army."""
+    all_weapons
+    weapons = []
+    seen = set()
+    for detachment in army["Detachments"]:
+        for unit in detachment["Units"]:
+            for item in unit["Items"]:
+                assert False
+
 def write_army_header(outfile, army, link=None):
     """ Write the army header. """
     army_name = army["Name"]
@@ -126,7 +136,7 @@ def write_army_header(outfile, army, link=None):
     total = army_points_cost(army)
     cp_total = army_cp_total(army)
     warlord = army["Warlord"]
-    outfile.write("<table>\n")
+    outfile.write("<table class='army_table'>\n")
     outfile.write("<tr><th colspan='2' class='title'>%s</th></tr>\n" % army_name)
     outfile.write("<tr><th>Warlord</th><td>%s</td></tr>\n" % warlord)
     outfile.write("<tr><th>Points limit</th><td>%s</td></tr>\n" % limit)
@@ -138,7 +148,7 @@ def write_army_header(outfile, army, link=None):
 def write_force_organisation_chart(outfile, detachment):
     """ Write the force organisation chart for the detachment. """
 
-    outfile.write("<table>\n")
+    outfile.write("<table class='detachment_table'>\n")
     outfile.write("<tr>\n")
     outfile.write("<th colspan='6' class='title'>%s</th>\n" % detachment["Name"])
     outfile.write("</tr>\n")
@@ -200,7 +210,7 @@ def write_squad(outfile, squad):
     """ Write out the cost breakdown for a squad. """
 
     # Squad name and total cost.
-    outfile.write("<table>\n")
+    outfile.write("<table class='unit_table'>\n")
     outfile.write("<tr>\n")
     outfile.write("<th colspan='4' class='title'>%s</th>\n" % squad["Name"])
     outfile.write("</tr>\n")
@@ -248,9 +258,6 @@ def write_army_file(out_dir, army):
         outfile.write("<link rel='stylesheet' type='text/css' href='../style.css'/>\n")
         outfile.write("</head>\n")
         outfile.write("<body>\n")
-
-        # Link back to index.
-        outfile.write("<a href='../index.html'>Back</a>\n")
 
         # Output totals and army info.
         write_army_header(outfile, army)

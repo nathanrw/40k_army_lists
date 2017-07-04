@@ -1,13 +1,14 @@
-Name,Cost
-Flamer, 9
-Missile Launcher, 25
-Storm Bolter, 2
-Force Axe, 16
-Power Sword, 4
-Power Fist, 20
-Twin Assault Cannon, 35
-Heavy Flamer, 17
-Furioso Fist (Single), 40
-Furioso Fist (Pair), 50
-Meltagun, 17
-Sniper Rifle, 4
+Name,Cost,Range,Type,S,AP,D,Abilities
+Flamer, 9, 8, Assault D6, 4, 0, 1, Hits automatically
+Missile Launcher, 25, 48, Heavy D6, 4, 0, 1, -
+Missile Launcher (krak), 25, 48, Heavy 1, 8, -2, D6, -
+Storm Bolter, 2, 24, Rapid Fire 2, 4, 0, 1, -
+Force Axe, 16, Melee, Melee, +1, -2, D3, -
+Power Sword, 4, Melee, Melee, +0, -3, 1, -
+Power Fist, 20, Melee, Melee, x2, -3, D3, Subtract 1 from to hit roll.
+Twin Assault Cannon, 35, 24, Heavy 12, 6, -1, 1, -
+Heavy Flamer, 17, 8, Heavy D6, 5, -1, 1, Hits automatically
+Furioso Fist (Single), 40, Melee, Melee, x2, -3, 3, -
+Furioso Fist (Pair), 50, Melee, Melee, x2, -3, 3, Re-roll failed hit rolls. (And it's two weapons.)
+Meltagun, 17, 12, Assault 1, 8, -4, D6, If half range roll 2 damage dice, pick highest.
+Sniper Rifle, 4, 36, Heavy 1, 4, 0, 1, Target character even if not closest. Additional mortal wound on 6+ wounding roll.
