@@ -381,9 +381,9 @@ def main():
     armies = read_armies("lists")
 
     # Create the necessary directory structure.
-    shutil.rmtree("html", True)
-    os.mkdir("html")
-    os.chdir("html")
+    shutil.rmtree("docs", True)
+    os.mkdir("docs")
+    os.chdir("docs")
     os.mkdir("lists")
     shutil.copy("../style/style.css", "style.css")
 

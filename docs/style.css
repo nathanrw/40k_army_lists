@@ -1,0 +1,32 @@
+/* Stylesheet for army lists.  It's also used for the index page. */
+
+/* Make the whole thing match the width of an A4 page for printing. */
+body {
+    width: 210mm;
+}
+
+/* Make tables fit the page, and apply a basic visual style. */
+table {
+    width: 95%;
+    border-collapse: collapse;
+    margin: 10;
+    page-break-inside: avoid;
+}
+td, th {
+    border: 1px solid #000000;
+    padding: 10px;
+}
+.title {
+    background-color: #000000;
+    color: #ffffff;
+}
+
+/* Ensure squad cards don't get split when printing, and add a border to group
+   their contents. */
+.squad {
+    border: 2px solid #000000;
+    border-radius: 10px;
+    margin-bottom: 20px;
+    margin-top: 20px;
+    page-break-inside: avoid;
+}
