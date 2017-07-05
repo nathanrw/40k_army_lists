@@ -12,7 +12,7 @@ hand. They go in the 'lists' subdirectory.
 Data for models, formations and weapons are stored in .csv files in the 'data'
 subdirectory.
 
-When you run this script, a 'html' subdirectory will be created containing
+When you run this script, a 'docs' subdirectory will be created containing
 pages for each army list in 'lists'.
 """
 
