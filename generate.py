@@ -29,10 +29,14 @@ def read_models():
         def __init__(self, name, cost):
             self.name = name
             self.cost = cost
+            self.stats = collections.OrderedDict()
     with open("data/models.csv") as csvfile:
         reader = csv.DictReader(csvfile)
         for row in reader:
             models[row["Name"]] = Model(row["Name"], int(row["Cost"]))
+            stats = ["Name", "Cost", "M", "WS", "BS", "S", "T", "W", "A", "Ld", "Sv"]
+            for stat in stats:
+                models[row["Name"]].stats[stat] = row[stat]
     return models
 
 def read_weapons():
@@ -42,10 +46,14 @@ def read_weapons():
         def __init__(self, name , cost):
             self.name = name
             self.cost = cost
+            self.stats = collections.OrderedDict()
     with open("data/weapons.csv") as csvfile:
         reader = csv.DictReader(csvfile)
         for row in reader:
             weapons[row["Name"]] = Weapon(row["Name"], int(row["Cost"]))
+            stats = ["Name", "Cost", "Range", "Type", "S", "AP", "D", "Abilities"]
+            for stat in stats:
+                weapons[row["Name"]].stats[stat] = row[stat]
     return weapons
 
 def read_formations():
@@ -66,9 +74,11 @@ def read_formations():
             formations[row["Name"]] = Formation(row)
     return formations
 
+WEAPONS = read_weapons()
+MODELS = read_models()
 COSTS = {}
-COSTS.update(read_models())
-COSTS.update(read_weapons())
+COSTS.update(WEAPONS)
+COSTS.update(MODELS)
 
 FORMATIONS = read_formations()
 
@@ -119,15 +129,62 @@ def army_cp_total(army):
 
 def list_army_weapons(army):
     """ List all of the weapons in the army."""
-    all_weapons = read_weapons()
     weapons = []
     seen = set()
     for detachment in army["Detachments"]:
         for unit in detachment["Units"]:
             for item in unit["Items"]:
-                if item in all_weapons and not item in seen:
+                if item in WEAPONS and not item in seen:
                     seen.add(item)
                     weapons.append(item)
+    return weapons
+
+def list_army_models(army):
+    """ List each distinct model in the army. """
+    models = []
+    seen = set()
+    for detachment in army["Detachments"]:
+        for unit in detachment["Units"]:
+            for item in unit["Items"]:
+                if item in MODELS and not item in seen:
+                    seen.add(item)
+                    models.append(item)
+    return models
+
+def write_weapons_table(outfile, item_names):
+    """ Write a table of weapons. """
+    stats = ["Name", "Cost", "Range", "Type", "S", "AP", "D", "Abilities"]
+    outfile.write("<table class='weapons_table'>\n")
+    outfile.write("<tr>\n")
+    for stat in stats:
+        outfile.write("<th class='title'>%s</th>\n" % stat)
+    outfile.write("</tr>\n")
+    for name in item_names:
+        outfile.write("<tr>\n")
+        item = lookup_item(name)
+        for stat in stats:
+            outfile.write("<td>%s</td>\n" % item.stats[stat])
+        outfile.write("</tr>\n")
+
+def write_models_table(outfile, item_names):
+    """ Write a table of models. """
+    stats = ["Name", "Cost", "M", "WS", "BS", "S", "T", "W", "A", "Ld", "Sv"]
+    outfile.write("<table class='models_table'>\n")
+    outfile.write("<tr>\n")
+    for stat in stats:
+        outfile.write("<th class='title'>%s</th>\n" % stat)
+    outfile.write("</tr>\n")
+    for name in item_names:
+        outfile.write("<tr>\n")
+        item = lookup_item(name)
+        for stat in stats:
+            value = item.stats[stat]
+            if stat in ("WS", "BS", "Sv"):
+                value += "+"
+            elif stat == "M":
+                value += "''"
+            outfile.write("<td>%s</td>\n" % value)
+        outfile.write("</tr>\n")
 
 def write_army_header(outfile, army, link=None):
     """ Write the army header. """
@@ -269,6 +326,12 @@ def write_army_file(out_dir, army):
         for detachment in army["Detachments"]:
             write_detachment(outfile, detachment)
         outfile.write("</div>\n")
+
+        # Write out a stats table for models used in the army.
+        write_models_table(outfile, list_army_models(army))
+
+        # Write out a stats table for weapons used in the army.
+        write_weapons_table(outfile, list_army_weapons(army))
 
         # End of HTML file.
         outfile.write("</body>\n")

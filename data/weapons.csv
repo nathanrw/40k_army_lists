@@ -10,5 +10,5 @@ Twin Assault Cannon, 35, 24, Heavy 12, 6, -1, 1, -
 Heavy Flamer, 17, 8, Heavy D6, 5, -1, 1, Hits automatically
 Furioso Fist (Single), 40, Melee, Melee, x2, -3, 3, -
 Furioso Fist (Pair), 50, Melee, Melee, x2, -3, 3, Re-roll failed hit rolls. (And it's two weapons.)
-Meltagun, 17, 12, Assault 1, 8, -4, D6, If half range roll 2 damage dice, pick highest.
+Meltagun, 17, 12, Assault 1, 8, -4, D6, If half range roll 2 damage dice and pick highest.
 Sniper Rifle, 4, 36, Heavy 1, 4, 0, 1, Target character even if not closest. Additional mortal wound on 6+ wounding roll.
