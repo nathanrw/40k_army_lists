@@ -10,9 +10,15 @@ Detachments:
       - Name: Tactical Squad
         Slot: Troops
         Items:
-          Tactical Marine: 10
+          Tactical Marine: 9
+          Tactical Marine Sergeant: 1
           Flamer: 1
           Missile Launcher: 1
+          Bolt Pistol: 1
+          Chainsword: 1
+          Bolter: 7
+          Frag Grenade: 10
+          Krak Grenade: 10
 
       - Name: Rhino
         Slot: Transports
@@ -24,11 +30,19 @@ Detachments:
         Slot: Elites
         Items:
           Death Company (Jump Pack): 10
+          Bolt Pistol: 10
+          Chainsword: 10
+          Frag Grenade: 10
+          Krak Grenade: 10
 
       - Name: Chaplain
         Slot: HQ
         Items:
           Chaplain (Jump Pack): 1
+          Bolt Pistol: 1
+          Crozius Arcanum: 1
+          Frag Grenade: 1
+          Krak Grenade: 1
 
       - Name: Librarian
         Slot: HQ
@@ -40,7 +54,8 @@ Detachments:
       - Name: Terminators
         Slot: Elites
         Items:
-          Terminator: 10
+          Terminator: 9
+          Terminator Sergeant: 1
           Power Fist: 9
           Power Sword: 1
           Storm Bolter: 10

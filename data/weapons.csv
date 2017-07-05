@@ -1,4 +1,10 @@
 Name,Cost,Range,Type,S,AP,D,Abilities
+Bolter, 0, 24, Rapid Fire 1, 4, 0, 1, -
+Bolt Pistol, 0, 12, Pistol 1, 4, 0, 1, -
+Frag Grenade, 0, 6, Grenade D6, 3, 0, 1, -
+Krak Grenade, 0, 6, Grenade 1, 6, -1, D3, -
+Chainsword, 0, Melee, Melee, +0, 0, 1, +1 attack with this weapon
+Crozius Arcanum, 0, Melee, Melee, +1, -1, 2, -
 Flamer, 9, 8, Assault D6, 4, 0, 1, Hits automatically
 Missile Launcher, 25, 48, Heavy D6, 4, 0, 1, -
 Missile Launcher (krak), 25, 48, Heavy 1, 8, -2, D6, -

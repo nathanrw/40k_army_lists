@@ -3,7 +3,8 @@
 """
 A warhammer 40,000 army list calculator.  You feed it a list of units with
 their wargear options and get back a html page with a breakdown of the costs
-and force organisation chart.
+and force organisation chart.  Units are output in the form of quick reference
+cards that can be printed for convenience.
 
 Input lists are expressed in YAML so that they are easy to read and write by
 hand. They go in the 'lists' subdirectory.
@@ -151,7 +152,7 @@ def list_army_models(army):
                     models.append(item)
     return models
 
-def write_weapons_table(outfile, item_names):
+def write_weapons_table(outfile, item_names, squad=None):
     """ Write a table of weapons. """
     if len (item_names) == 0:
         return
@@ -160,16 +161,20 @@ def write_weapons_table(outfile, item_names):
     outfile.write("<tr>\n")
     for stat in stats:
         outfile.write("<th class='title'>%s</th>\n" % stat)
+    if squad is not None:
+        outfile.write("<th class='title'>Qty</th>\n")
     outfile.write("</tr>\n")
     for name in item_names:
         outfile.write("<tr>\n")
         item = lookup_item(name)
         for stat in stats:
             outfile.write("<td>%s</td>\n" % item.stats[stat])
+        if squad is not None:
+            outfile.write("<td>%s</td>\n" % squad["Items"][name])
         outfile.write("</tr>\n")
     outfile.write("</table>\n")
 
-def write_models_table(outfile, item_names):
+def write_models_table(outfile, item_names, squad=None):
     """ Write a table of models. """
     if len (item_names) == 0:
         return
@@ -178,6 +183,8 @@ def write_models_table(outfile, item_names):
     outfile.write("<tr>\n")
     for stat in stats:
         outfile.write("<th class='title'>%s</th>\n" % stat)
+    if squad is not None:
+        outfile.write("<th class='title'>Qty</th>\n")
     outfile.write("</tr>\n")
     for name in item_names:
         outfile.write("<tr>\n")
@@ -189,6 +196,8 @@ def write_models_table(outfile, item_names):
             elif stat == "M":
                 value += "''"
             outfile.write("<td>%s</td>\n" % value)
+        if squad is not None:
+            outfile.write("<td>%s</td>\n" % squad["Items"][name])
         outfile.write("</tr>\n")
     outfile.write("</table>\n")
 
@@ -302,30 +311,44 @@ def write_squad(outfile, squad):
     outfile.write("<td>%s</td>\n" % squad_points_cost(squad))
     outfile.write("</tr>\n")
     outfile.write("</table>\n")
-    outfile.write("<table class='unit_table'>\n")
-    outfile.write("<tr>\n")
-    outfile.write("<th class='title'>Item</th>\n")
-    outfile.write("<th class='title'>Quantity</th>\n")
-    outfile.write("</tr>\n")
-
-    # List each item with cost and quantity.
-    for item in squad["Items"]:
-        outfile.write("<tr>\n")
-        quantity = squad["Items"][item]
-        cost = lookup_item(item).cost
-        outfile.write("<td>%s</td>\n" % item)
-        outfile.write("<td>%s</td>\n" % quantity)
-        outfile.write("</tr>\n")
-
-    # Done with the table.
-    outfile.write("</table>\n")
 
     # Write quick reference tables for the squad.
-    write_models_table(outfile, models)
-    write_weapons_table(outfile, weapons)
+    write_models_table(outfile, models, squad)
+    write_weapons_table(outfile, weapons, squad)
 
     # Done with the squad.
     outfile.write("</div>\n")
+
+def write_army(outfile, army):
+    """ Write the HTML for an army to a stream. """
+
+    # Start of HTML file.
+    outfile.write("<html>\n")
+    outfile.write("<head>\n")
+    outfile.write("<link rel='stylesheet' type='text/css' href='../style.css'/>\n")
+    outfile.write("</head>\n")
+    outfile.write("<body>\n")
+
+    # Output totals and army info.
+    write_army_header(outfile, army)
+
+    # Output breakdown for each detachment.
+    outfile.write("<div class='army'>\n")
+    for detachment in army["Detachments"]:
+        write_detachment(outfile, detachment)
+    outfile.write("</div>\n")
+
+    # Write out stat tables for all weapons and models in army. Since
+    # we have those in place, I'm not sure how useful this is, so it's
+    # switched off for now.
+    write_appendices = False
+    if write_appendices:
+        write_models_table(outfile, list_army_models(army))
+        write_weapons_table(outfile, list_army_weapons(army))
+
+    # End of HTML file.
+    outfile.write("</body>\n")
+    outfile.write("</html>\n")
 
 def write_army_file(out_dir, army):
     """ Process a single army. """
@@ -339,32 +362,7 @@ def write_army_file(out_dir, army):
 
     # Write the army.
     with open(filename, "w") as outfile:
-
-        # Start of HTML file.
-        outfile.write("<html>\n")
-        outfile.write("<head>\n")
-        outfile.write("<link rel='stylesheet' type='text/css' href='../style.css'/>\n")
-        outfile.write("</head>\n")
-        outfile.write("<body>\n")
-
-        # Output totals and army info.
-        write_army_header(outfile, army)
-
-        # Output breakdown for each detachment.
-        outfile.write("<div class='army'>\n")
-        for detachment in army["Detachments"]:
-            write_detachment(outfile, detachment)
-        outfile.write("</div>\n")
-
-        # Write out a stats table for models used in the army.
-        write_models_table(outfile, list_army_models(army))
-
-        # Write out a stats table for weapons used in the army.
-        write_weapons_table(outfile, list_army_weapons(army))
-
-        # End of HTML file.
-        outfile.write("</body>\n")
-        outfile.write("</html>\n")
+        write_army(outfile, army)
 
     # Output the name of the file we wrote.
     return filename
