@@ -29,5 +29,15 @@ td, th {
 .unit_table {
 }
 
-.army, .detachment {
+.army {
+}
+
+.detachment {
+}
+
+.squad {
+    border: 2px solid #000000;
+    border-radius: 10px;
+    margin-bottom: 20px;
+    margin-top: 20px;
 }

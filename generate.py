@@ -153,6 +153,8 @@ def list_army_models(army):
 
 def write_weapons_table(outfile, item_names):
     """ Write a table of weapons. """
+    if len (item_names) == 0:
+        return
     stats = ["Name", "Cost", "Range", "Type", "S", "AP", "D", "Abilities"]
     outfile.write("<table class='weapons_table'>\n")
     outfile.write("<tr>\n")
@@ -165,9 +167,12 @@ def write_weapons_table(outfile, item_names):
         for stat in stats:
             outfile.write("<td>%s</td>\n" % item.stats[stat])
         outfile.write("</tr>\n")
+    outfile.write("</table>\n")
 
 def write_models_table(outfile, item_names):
     """ Write a table of models. """
+    if len (item_names) == 0:
+        return
     stats = ["Name", "Cost", "M", "WS", "BS", "S", "T", "W", "A", "Ld", "Sv"]
     outfile.write("<table class='models_table'>\n")
     outfile.write("<tr>\n")
@@ -185,6 +190,7 @@ def write_models_table(outfile, item_names):
                 value += "''"
             outfile.write("<td>%s</td>\n" % value)
         outfile.write("</tr>\n")
+    outfile.write("</table>\n")
 
 def write_army_header(outfile, army, link=None):
     """ Write the army header. """
@@ -268,21 +274,38 @@ def write_detachment(outfile, detachment):
 def write_squad(outfile, squad):
     """ Write out the cost breakdown for a squad. """
 
+    # Determine weapons and models used in the squad.
+    weapons = []
+    models = []
+    num_models = 0
+    for item in squad["Items"]:
+        if item in WEAPONS and not item in weapons:
+            weapons.append(item)
+        elif item in MODELS and not item in models:
+            models.append(item)
+            num_models += squad["Items"][item]
+
+    # Start the squad.
+    outfile.write("<div class='squad'>\n")
+
     # Squad name and total cost.
     outfile.write("<table class='unit_table'>\n")
     outfile.write("<tr>\n")
-    outfile.write("<th colspan='4' class='title'>%s</th>\n" % squad["Name"])
+    outfile.write("<th colspan='6' class='title'>%s</th>\n" % squad["Name"])
     outfile.write("</tr>\n")
     outfile.write("<tr>\n")
     outfile.write("<th>Slot</th>\n")
     outfile.write("<td>%s</td>\n" % squad["Slot"])
+    outfile.write("<th>Models</th>\n")
+    outfile.write("<td>%s</td>\n" % num_models)
     outfile.write("<th>Cost</th>\n")
     outfile.write("<td>%s</td>\n" % squad_points_cost(squad))
     outfile.write("</tr>\n")
+    outfile.write("</table>\n")
+    outfile.write("<table class='unit_table'>\n")
     outfile.write("<tr>\n")
-    outfile.write("<th colspan='2'>Item</th>\n")
-    outfile.write("<th>Unit Cost</th>\n")
-    outfile.write("<th>Quantity</th>\n")
+    outfile.write("<th class='title'>Item</th>\n")
+    outfile.write("<th class='title'>Quantity</th>\n")
     outfile.write("</tr>\n")
 
     # List each item with cost and quantity.
@@ -290,13 +313,19 @@ def write_squad(outfile, squad):
         outfile.write("<tr>\n")
         quantity = squad["Items"][item]
         cost = lookup_item(item).cost
-        outfile.write("<td colspan='2'>%s</td>\n" % item)
-        outfile.write("<td>%s</td>\n" % cost)
+        outfile.write("<td>%s</td>\n" % item)
         outfile.write("<td>%s</td>\n" % quantity)
         outfile.write("</tr>\n")
 
     # Done with the table.
     outfile.write("</table>\n")
+
+    # Write quick reference tables for the squad.
+    write_models_table(outfile, models)
+    write_weapons_table(outfile, weapons)
+
+    # Done with the squad.
+    outfile.write("</div>\n")
 
 def write_army_file(out_dir, army):
     """ Process a single army. """
