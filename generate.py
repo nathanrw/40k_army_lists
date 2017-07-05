@@ -119,13 +119,15 @@ def army_cp_total(army):
 
 def list_army_weapons(army):
     """ List all of the weapons in the army."""
-    all_weapons
+    all_weapons = read_weapons()
     weapons = []
     seen = set()
     for detachment in army["Detachments"]:
         for unit in detachment["Units"]:
             for item in unit["Items"]:
-                assert False
+                if item in all_weapons and not item in seen:
+                    seen.add(item)
+                    weapons.append(item)
 
 def write_army_header(outfile, army, link=None):
     """ Write the army header. """
