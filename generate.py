@@ -24,7 +24,7 @@ import collections
 
 def read_models():
     """ Read all of the models into a table. """
-    models = {}
+    models = collections.OrderedDict()
     class Model(object):
         def __init__(self, name, cost):
             self.name = name
@@ -41,7 +41,7 @@ def read_models():
 
 def read_weapons():
     """ Read all of the weapons into a table. """
-    weapons = {}
+    weapons = collections.OrderedDict()
     class Weapon(object):
         def __init__(self, name , cost):
             self.name = name
@@ -58,7 +58,7 @@ def read_weapons():
 
 def read_formations():
     """ Read all of the formations into a table. """
-    formations = {}
+    formations = collections.OrderedDict()
     class Formation(object):
         def __init__(self, row):
             self.name = row["Name"]
@@ -74,12 +74,12 @@ def read_formations():
             formations[row["Name"]] = Formation(row)
     return formations
 
+# Read in static data.
 WEAPONS = read_weapons()
 MODELS = read_models()
 COSTS = {}
 COSTS.update(WEAPONS)
 COSTS.update(MODELS)
-
 FORMATIONS = read_formations()
 
 def lookup_item(item):
