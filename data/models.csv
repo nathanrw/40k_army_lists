@@ -1,19 +1,19 @@
-Name,Cost,M,WS,BS,S,T,W,A,Ld,Sv
-Tactical Marine, 13, 6, 3, 3, 4, 4, 1, 1, 7, 3
-Tactical Marine Sergeant, 13, 6, 3, 3, 4, 4, 1, 2, 8, 3
-Rhino, 70, 12, 6, 3, 6, 7, 10, 3, 8, 3
-Rhino (5W), 70, 6, 6, 4, 6, 7, 10, D3, 8, 3
-Rhino (2W), 70, 3, 6, 5, 6, 7, 10, 1, 8, 3
-Death Company (Jump Pack), 20, 12, 3, 3, 4, 4, 1, 2, 7, 3
-Librarian (Terminator Armour), 145, 5, 3, 3, 4, 4, 5, 3, 9, 2
-Chaplain (Jump Pack), 90, 12, 2, 3, 4, 4, 4, 3, 9, 3
-Terminator, 26, 5, 3, 3, 4, 4, 2, 2, 8, 2
-Terminator Sergeant, 26, 5, 3, 3, 4, 4, 2, 3, 9, 2
-Baal Predator, 107, 12, 6, 3, 6, 7, 11, 3, 8, 3
-Baal Predator (5W), 107, 6, 6, 4, 6, 7, 11, D3, 8, 3
-Baal Predator (2W), 107, 3, 6, 5, 6, 7, 11, 1, 8, 3
-Furioso Dreadnaught, 122, 8, 3, 3, 6, 7, 8, 4, 8, 3
-Death Company Dreadnought, 128, 8, 3, 3, 6, 7, 8, 4, 7, 3
-Scout Marine, 11, 6, 3, 3, 4, 4, 1, 1, 7, 4
-Scout Sergeant, 11, 6, 3, 3, 4, 4, 1, 2, 8, 4
-Captain Tycho, 95, 6, 2, 2, 4, 4, 5, 4, 9, 2
+Name,Cost,M,WS,BS,S,T,W,A,Ld,Sv,Abilities
+Tactical Marine, 13, 6, 3, 3, 4, 4, 1, 1, 7, 3, And They Shall Know No Fear | Combat Squads
+Tactical Marine Sergeant, 13, 6, 3, 3, 4, 4, 1, 2, 8, 3, And They Shall Know No Fear | Combat Squads
+Rhino, 70, 12, 6, 3, 6, 7, 10, 3, 8, 3, Explodes | Smoke Launchers | Self-Repair
+Rhino (5W), 70, 6, 6, 4, 6, 7, 10, D3, 8, 3, Explodes | Smoke Launchers | Self-Repair
+Rhino (2W), 70, 3, 6, 5, 6, 7, 10, 1, 8, 3, Explodes | Smoke Launchers | Self-Repair
+Death Company (Jump Pack), 20, 12, 3, 3, 4, 4, 1, 2, 7, 3, And They Shall Know No Fear | Black Rage | Jump Pack Assault
+Librarian (Terminator Armour), 145, 5, 3, 3, 4, 4, 5, 3, 9, 2, And They Shall Know No Fear | Teleport Strike | Crux Terminatus | Psychic Hood
+Chaplain (Jump Pack), 90, 12, 2, 3, 4, 4, 4, 3, 9, 3, And They Shall Know No Fear | Jump Pack Assault | Litanies of Hate | Spiritual Leaders | Rosarius
+Terminator, 26, 5, 3, 3, 4, 4, 2, 2, 8, 2, And They Shall Know No Fear | Teleport Strike | Combat Squads | Crux Terminatus | Teleport Homer
+Terminator Sergeant, 26, 5, 3, 3, 4, 4, 2, 3, 9, 2, And They Shall Know No Fear | Teleport Strike | Combat Squads | Crux Terminatus | Teleport Homer
+Baal Predator, 107, 12, 6, 3, 6, 7, 11, 3, 8, 3, Overcharged Engines | Explodes | Smoke Launchers
+Baal Predator (5W), 107, 6, 6, 4, 6, 7, 11, D3, 8, 3,Overcharged Engines | Explodes | Smoke Launchers
+Baal Predator (2W), 107, 3, 6, 5, 6, 7, 11, 1, 8, 3,Overcharged Engines | Explodes | Smoke Launchers
+Furioso Dreadnaught, 122, 8, 3, 3, 6, 7, 8, 4, 8, 3, And They Shall Know No Fear | Explodes | Smoke Launchers
+Death Company Dreadnought, 128, 8, 3, 3, 6, 7, 8, 4, 7, 3, And They Shall Know No Fear | Black Rage | Insatiable | Explodes | Smoke Launchers
+Scout Marine, 11, 6, 3, 3, 4, 4, 1, 1, 7, 4, And They Shall Know No Fear | Combat Squads | Concealed Position | Camo Cloaks
+Scout Sergeant, 11, 6, 3, 3, 4, 4, 1, 2, 8, 4, And They Shall Know No Fear | Combat Squads | Concealed Position | Camo Cloaks
+Captain Tycho, 95, 6, 2, 2, 4, 4, 5, 4, 9, 2, And They Shall Know No Fear | Rites of Battle | Abhor the Beast | Iron Halo

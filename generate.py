@@ -31,13 +31,16 @@ def read_models():
             self.name = name
             self.cost = cost
             self.stats = collections.OrderedDict()
+            self.abilities = []
     with open("data/models.csv") as csvfile:
         reader = csv.DictReader(csvfile)
         for row in reader:
-            models[row["Name"]] = Model(row["Name"], int(row["Cost"]))
+            model = Model(row["Name"], int(row["Cost"]))
             stats = ["Name", "Cost", "M", "WS", "BS", "S", "T", "W", "A", "Ld", "Sv"]
             for stat in stats:
-                models[row["Name"]].stats[stat] = row[stat]
+                model.stats[stat] = row[stat]
+            model.abilities = [x.strip() for x in row["Abilities"].split("|")]
+            models[row["Name"]] = model
     return models
 
 def read_weapons():
