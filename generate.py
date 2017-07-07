@@ -23,6 +23,19 @@ import os
 import yaml
 import collections
 
+def read_abilities():
+    """ Read all of the abilities into a table. """
+    abilities = collections.OrderedDict()
+    class Ability(object):
+        def __init__(self, name, description):
+            self.name = name
+            self.description = description
+    with open("data/abilities.csv") as csvfile:
+        reader = csv.DictReader(csvfile)
+        for row in reader:
+            abilities[row["Name"]] = Ability(row["Name"], row["Description"])
+    return abilities
+
 def read_models():
     """ Read all of the models into a table. """
     models = collections.OrderedDict()
@@ -85,6 +98,7 @@ COSTS = {}
 COSTS.update(WEAPONS)
 COSTS.update(MODELS)
 FORMATIONS = read_formations()
+ABILITIES = read_abilities()
 
 def lookup_item(item):
     """ Lookup an item in the costs table. """
@@ -100,6 +114,13 @@ def lookup_formation(formation):
         return FORMATIONS[formation]
     except KeyError:
         print ("No formation '%s' in formations table." % formation)
+
+def lookup_ability(ability):
+    """ Look up an ability in the abilities table. """
+    try:
+        return ABILITIES[ability]
+    except KeyError:
+        print ("No ability '%s' in abilities table." % ability)
 
 def army_points_cost(army):
     """ Calculate the total points cost of an army"""
@@ -213,6 +234,7 @@ def write_army_header(outfile, army, link=None):
     total = army_points_cost(army)
     cp_total = army_cp_total(army)
     warlord = army["Warlord"]
+    outfile.write("<div class='army_header'>\n")
     outfile.write("<table class='army_table'>\n")
     outfile.write("<tr><th colspan='2' class='title'>%s</th></tr>\n" % army_name)
     outfile.write("<tr><th>Warlord</th><td>%s</td></tr>\n" % warlord)
@@ -221,9 +243,12 @@ def write_army_header(outfile, army, link=None):
     outfile.write("<tr><th>Points to spare</th><td>%s</td></tr>\n" % (limit - total))
     outfile.write("<tr><th>CP</td><td>%s</th></tr>\n" % cp_total)
     outfile.write("</table>\n")
+    outfile.write("</div>\n")
 
 def write_force_organisation_chart(outfile, detachment):
     """ Write the force organisation chart for the detachment. """
+
+    outfile.write("<div class='detachment_header'>\n")
 
     outfile.write("<table class='detachment_table'>\n")
     outfile.write("<tr>\n")
@@ -237,14 +262,16 @@ def write_force_organisation_chart(outfile, detachment):
     outfile.write("<th>Cost</th>\n")
     outfile.write("<td colspan='1'>%s</td>\n" % detachment_points_cost(detachment))
     outfile.write("</tr>\n")
+    outfile.write("</table>\n")
 
     # Write the column header. Note that transports are handled as a special
     # case.
+    outfile.write("<table class='detachment_table'>\n")
     outfile.write("<tr>\n")
     formation = lookup_formation(detachment["Type"])
     for slot in formation.slots:
-        outfile.write("<th>%s</th>\n" % slot)
-    outfile.write("<th>Transports</th>\n")
+        outfile.write("<th class='title'>%s</th>\n" % slot)
+    outfile.write("<th class='title'>Transports</th>\n")
     outfile.write("</tr>\n")
 
     # Write the slot totals and limits.
@@ -271,6 +298,8 @@ def write_force_organisation_chart(outfile, detachment):
     outfile.write("</tr>\n")
     outfile.write("</table>\n")
 
+    outfile.write("</div>\n")
+
 def write_detachment(outfile, detachment):
     """ Write a detachment. """
 
@@ -289,6 +318,7 @@ def write_squad(outfile, squad):
     # Determine weapons and models used in the squad.
     weapons = []
     models = []
+    abilities = []
     num_models = 0
     for item in squad["Items"]:
         if item in WEAPONS and not item in weapons:
@@ -296,6 +326,9 @@ def write_squad(outfile, squad):
         elif item in MODELS and not item in models:
             models.append(item)
             num_models += squad["Items"][item]
+            for ability in lookup_item(item).abilities:
+                if not ability in abilities:
+                    abilities.append(ability)
 
     # Start the squad.
     outfile.write("<div class='squad'>\n")
@@ -318,6 +351,18 @@ def write_squad(outfile, squad):
     # Write quick reference tables for the squad.
     write_models_table(outfile, models, squad)
     write_weapons_table(outfile, weapons, squad)
+
+    # Write out the list of abilities.
+    if len(abilities) > 0:
+        outfile.write("<table>\n")
+        outfile.write("<tr>\n")
+        outfile.write("<th class='title' colspan='2'>Abilities</th>\n")
+        outfile.write("</tr>\n")
+        for ability in abilities:
+            outfile.write("<tr>\n")
+            outfile.write("<td><span class='ability_tag'>%s: </span> %s</td>\n" % (ability, lookup_ability(ability).description))
+            outfile.write("</tr>\n")
+        outfile.write("</table>\n")
 
     # Done with the squad.
     outfile.write("</div>\n")

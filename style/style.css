@@ -9,24 +9,34 @@ body {
 table {
     width: 95%;
     border-collapse: collapse;
-    margin: 10;
+    margin: auto;
+    margin-top: 15px;
+    margin-bottom: 15px;
     page-break-inside: avoid;
 }
 td, th {
-    border: 1px solid #000000;
-    padding: 10px;
+    padding: 4px;
 }
 .title {
     background-color: #000000;
     color: #ffffff;
+    padding: 10px;
+    font-variant: small-caps;
 }
 
 /* Ensure squad cards don't get split when printing, and add a border to group
    their contents. */
-.squad {
+.squad, .detachment_header, .army_header {
     border: 2px solid #000000;
     border-radius: 10px;
     margin-bottom: 20px;
     margin-top: 20px;
     page-break-inside: avoid;
 }
+
+/* The name of an ability should stand out. */
+.ability_tag {
+    font-weight: bold;
+}
+
+
