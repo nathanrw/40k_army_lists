@@ -22,6 +22,7 @@ import shutil
 import os
 import yaml
 import collections
+import re
 
 def read_abilities():
     """ Read all of the abilities into a table. """
@@ -38,39 +39,94 @@ def read_abilities():
 
 def read_models():
     """ Read all of the models into a table. """
+
+    # Store models in 'document order'.
     models = collections.OrderedDict()
+
+    # Represents a model.
     class Model(object):
         def __init__(self, name, cost):
             self.name = name
             self.cost = cost
             self.stats = collections.OrderedDict()
             self.abilities = []
+            self.damage_variants = []
+
+    # Read in each model definition from the file.
     with open("data/models.csv") as csvfile:
         reader = csv.DictReader(csvfile)
         for row in reader:
-            model = Model(row["Name"], int(row["Cost"]))
+
+            # Read in the model from the table row.
+            name = row["Name"]
+            cost = int(row["Cost"])
+            model = Model(name, cost)
             stats = ["Name", "Cost", "M", "WS", "BS", "S", "T", "W", "A", "Ld", "Sv"]
             for stat in stats:
                 model.stats[stat] = row[stat]
             model.abilities = [x.strip() for x in row["Abilities"].split("|")]
-            models[row["Name"]] = model
+
+            # The model might actually be a damage variant of another model.  If
+            # it is, then add it to the base model's list.
+            pattern = "(.*)\\(([0-9]+)W\\)"
+            match = re.match(pattern, name)
+            if match:
+                base_name = match.group(1).strip()
+                threshold = int(match.group(2))
+                models[base_name].damage_variants.append((threshold, model))
+            else:
+                models[name] = model
+
+    # Done!
     return models
 
 def read_weapons():
     """ Read all of the weapons into a table. """
+
+    # We want weapons in 'document order'.
     weapons = collections.OrderedDict()
+
+    # Represents a weapon. Should always be accessed via 'modes()'.
     class Weapon(object):
         def __init__(self, name , cost):
             self.name = name
             self.cost = cost
             self.stats = collections.OrderedDict()
+            self.stats["Name"] = name
+            self.stats["Cost"] = cost
+            self.modes = []
+        def get_modes(self):
+            if len(self.modes) > 0:
+                return self.modes
+            else:
+                return [self]
+
+    # Read in the weapons table.
     with open("data/weapons.csv") as csvfile:
         reader = csv.DictReader(csvfile)
         for row in reader:
-            weapons[row["Name"]] = Weapon(row["Name"], int(row["Cost"]))
+
+            # Read in the weapon from the table row.
+            name = row["Name"]
+            cost = int(row["Cost"])
+            weapon = Weapon(name, cost)
             stats = ["Name", "Cost", "Range", "Type", "S", "AP", "D", "Abilities"]
             for stat in stats:
-                weapons[row["Name"]].stats[stat] = row[stat]
+                weapon.stats[stat] = row[stat]
+
+            # Weapons with different firing modes have the modes grouped
+            # together as separate 'weapons' under a dummy base weapon entry.
+            pattern = "(.*)\\[.*\\]"
+            match = re.match(pattern, name)
+            if match:
+                base_name = match.group(1).strip()
+                if not base_name in weapons:
+                    weapons[base_name] = Weapon(base_name, cost)
+                weapons[base_name].modes.append(weapon)
+            else:
+                weapons[name] = weapon
+
+    # Phew, we're done.
     return weapons
 
 def read_formations():
@@ -189,13 +245,41 @@ def write_weapons_table(outfile, item_names, squad=None):
         outfile.write("<th class='title'>Qty</th>\n")
     outfile.write("</tr>\n")
     for name in item_names:
-        outfile.write("<tr>\n")
         item = lookup_item(name)
-        for stat in stats:
-            outfile.write("<td>%s</td>\n" % item.stats[stat])
-        if squad is not None:
-            outfile.write("<td>%s</td>\n" % squad["Items"][name])
-        outfile.write("</tr>\n")
+        modes = item.get_modes()
+
+        # If the item has multiple firing modes, write an extra line to display
+        # the cost and quantity.
+        multiple_modes = len(modes) > 1
+        if multiple_modes:
+            outfile.write("<tr>\n")
+            for stat in stats:
+                value = ""
+                if stat != "Cost" and stat != "Name":
+                    value = "-"
+                else:
+                    value = item.stats[stat]
+                outfile.write("<td>%s</td>\n" % value)
+            if squad is not None:
+                outfile.write("<td>%s</td>\n" % squad["Items"][name])
+            outfile.write("</tr>\n")
+
+        # Write out the stats for the weapon. If we've already written the
+        # cost and quantity (because there are multiple modes) then we dont
+        # want to do it again.
+        for mode in modes:
+            outfile.write("<tr>\n")
+            for stat in stats:
+                value = mode.stats[stat]
+                if multiple_modes and stat == "Cost":
+                    value = "-"
+                outfile.write("<td>%s</td>\n" % value)
+            if squad is not None:
+                value = "-"
+                if not multiple_modes:
+                    value = squad["Items"][name]
+                outfile.write("<td>%s</td>\n" % value)
+            outfile.write("</tr>\n")
     outfile.write("</table>\n")
 
 def write_models_table(outfile, item_names, squad=None):
@@ -211,18 +295,29 @@ def write_models_table(outfile, item_names, squad=None):
         outfile.write("<th class='title'>Qty</th>\n")
     outfile.write("</tr>\n")
     for name in item_names:
-        outfile.write("<tr>\n")
         item = lookup_item(name)
-        for stat in stats:
-            value = item.stats[stat]
-            if stat in ("WS", "BS", "Sv"):
-                value += "+"
-            elif stat == "M":
-                value += "''"
-            outfile.write("<td>%s</td>\n" % value)
-        if squad is not None:
-            outfile.write("<td>%s</td>\n" % squad["Items"][name])
-        outfile.write("</tr>\n")
+        variants = [item]
+        for (threshold, variant) in item.damage_variants:
+            variants.append(variant)
+        first = True
+        for variant in variants:
+            outfile.write("<tr>\n")
+            for stat in stats:
+                value = variant.stats[stat]
+                if stat in ("WS", "BS", "Sv"):
+                    value += "+"
+                elif stat == "M":
+                    value += "''"
+                elif stat == "Cost" and not first:
+                    value = "-"
+                outfile.write("<td>%s</td>\n" % value)
+            if squad is not None:
+                value = "-"
+                if first:
+                    value = squad["Items"][name]
+                outfile.write("<td>%s</td>\n" % value)
+            outfile.write("</tr>\n")
+            first = False
     outfile.write("</table>\n")
 
 def write_army_header(outfile, army, link=None):
