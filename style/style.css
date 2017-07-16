@@ -23,6 +23,12 @@ td, th {
     padding: 10px;
     font-variant: small-caps;
 }
+.title a {
+    color: #ffffff;
+}
+.title a:visited {
+    color: #999999;
+}
 
 /* Ensure squad cards don't get split when printing, and add a border to group
    their contents. */
