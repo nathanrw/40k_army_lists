@@ -338,6 +338,21 @@ def write_army_header(outfile, army, link=None):
     outfile.write("<tr><th>Points to spare</th><td>%s</td></tr>\n" % (limit - total))
     outfile.write("<tr><th>CP</td><td>%s</th></tr>\n" % cp_total)
     outfile.write("</table>\n")
+    outfile.write("<table>\n")
+    outfile.write("<tr>\n")
+    outfile.write("<th class='title'>Detachment</th>\n")
+    outfile.write("<th class='title'>Type</th>\n")
+    outfile.write("<th class='title'>CP</th>\n")
+    outfile.write("<th class='title'>Cost</th>\n")
+    outfile.write("</tr>\n")
+    for detachment in army["Detachments"]:
+        outfile.write("<tr>\n")
+        outfile.write("<td colspan='1'>%s</td>\n" % detachment["Name"])
+        outfile.write("<td colspan='1'>%s</td>\n" % detachment["Type"])
+        outfile.write("<td colspan='1'>%s</td>\n" % lookup_formation(detachment["Type"]).cp)
+        outfile.write("<td colspan='1'>%s</td>\n" % detachment_points_cost(detachment))
+        outfile.write("</tr>\n")
+    outfile.write("</table>\n")
     outfile.write("</div>\n")
 
 def write_force_organisation_chart(outfile, detachment):
@@ -391,6 +406,21 @@ def write_force_organisation_chart(outfile, detachment):
             transport_limit += 1
     outfile.write("<td>%s/%s</td>\n" % (transport_count, transport_limit))
     outfile.write("</tr>\n")
+    outfile.write("</table>\n")
+
+    # Write a summary of all units in detachment.
+    outfile.write("<table>\n")
+    outfile.write("<tr>\n")
+    outfile.write("<th class='title'>Unit</th>\n")
+    outfile.write("<th class='title'>Slot</th>\n")
+    outfile.write("<th class='title'>Cost</th>\n")
+    outfile.write("</tr>\n")
+    for squad in detachment["Units"]:
+        outfile.write("<tr>\n")
+        outfile.write("<td>%s</td>\n" % squad["Name"])
+        outfile.write("<td>%s</td>\n" % squad["Slot"])
+        outfile.write("<td>%s</td>\n" % squad_points_cost(squad))
+        outfile.write("</tr>\n")
     outfile.write("</table>\n")
 
     outfile.write("</div>\n")
