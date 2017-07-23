@@ -18,3 +18,5 @@ Furioso Fist (Single), 40, Melee, Melee, x2, -3, 3, -
 Furioso Fist (Pair), 50, Melee, Melee, x2, -3, 3, Re-roll failed hit rolls. (And it's two weapons.)
 Meltagun, 17, 12, Assault 1, 8, -4, D6, If half range roll 2 damage dice and pick highest.
 Sniper Rifle, 4, 36, Heavy 1, 4, 0, 1, Target character even if not closest. Additional mortal wound on 6+ wounding roll.
+Blood Song [Master-crafted boltgun], 0, 24, Rapid Fire 1, 4, -1, 2, Combi-weapon
+Blood Song [Meltagun], 0, 12, Assault 1, 8, -4, D6, Combi-weapon. Roll 2D6 for damage and pick highest if within half range.

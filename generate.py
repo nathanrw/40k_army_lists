@@ -51,6 +51,7 @@ def read_models():
             self.stats = collections.OrderedDict()
             self.abilities = []
             self.damage_variants = []
+            self.includes_wargear = False
 
     # Read in each model definition from the file.
     with open("data/models.csv") as csvfile:
@@ -65,6 +66,11 @@ def read_models():
             for stat in stats:
                 model.stats[stat] = row[stat]
             model.abilities = [x.strip() for x in row["Abilities"].split("|")]
+
+            # Some models include the price of their wargear.
+            includes_wargear = row["IncludesWargear"]
+            if len(includes_wargear) != 0 and int(includes_wargear)!=0:
+                model.includes_wargear = True
 
             # The model might actually be a damage variant of another model.  If
             # it is, then add it to the base model's list.
@@ -192,13 +198,45 @@ def detachment_points_cost(detachment):
         total += squad_points_cost(squad)
     return total
 
-def squad_points_cost(squad):
-    """ Calculate the total points cost of a squad. """
+def squad_models_cost(squad):
+    """ Calculate the cost of a squad's models. """
     total = 0
     for item in squad["Items"]:
-        quantity = squad["Items"][item]
-        total += lookup_item(item).cost * quantity
+        if item in MODELS:
+            quantity = squad["Items"][item]
+            total += lookup_item(item).cost * quantity
     return total
+
+def squad_wargear_included(squad):
+    """
+    Figure out whether the cost of the wargear is included already
+    in the cost of the models
+    """
+    include_wargear = False
+    for item in squad["Items"]:
+        if item in MODELS:
+            if lookup_item(item).includes_wargear:
+                include_wargear = True
+            else:
+                # Can't cope with some models in a squad including their
+                # wargear and some not!
+                assert not include_wargear
+    return include_wargear
+
+def squad_wargear_cost(squad):
+    """ Figure out the cost of a squad's wargear. """
+    if squad_wargear_included(squad):
+        return 0
+    total = 0
+    for item in squad["Items"]:
+        if item in WEAPONS:
+            quantity = squad["Items"][item]
+            total += lookup_item(item).cost * quantity
+    return total
+
+def squad_points_cost(squad):
+    """ Calculate the total points cost of a squad. """
+    return squad_models_cost(squad) + squad_wargear_cost(squad)
 
 def army_cp_total(army):
     """ Calculate the total command points available to an army. """
@@ -236,6 +274,7 @@ def write_weapons_table(outfile, item_names, squad=None):
     """ Write a table of weapons. """
     if len (item_names) == 0:
         return
+    wargear_included = squad is not None and squad_wargear_included(squad)
     stats = ["Name", "Cost", "Range", "Type", "S", "AP", "D", "Abilities"]
     outfile.write("<table class='weapons_table'>\n")
     outfile.write("<tr>\n")
@@ -258,7 +297,10 @@ def write_weapons_table(outfile, item_names, squad=None):
                 if stat != "Cost" and stat != "Name":
                     value = "-"
                 else:
-                    value = item.stats[stat]
+                    if stat == "Cost" and wargear_included:
+                        value = "-"
+                    else:
+                        value = item.stats[stat]
                 outfile.write("<td>%s</td>\n" % value)
             if squad is not None:
                 outfile.write("<td>%s</td>\n" % squad["Items"][name])
@@ -271,7 +313,7 @@ def write_weapons_table(outfile, item_names, squad=None):
             outfile.write("<tr>\n")
             for stat in stats:
                 value = mode.stats[stat]
-                if multiple_modes and stat == "Cost":
+                if stat == "Cost" and (multiple_modes or wargear_included):
                     value = "-"
                 outfile.write("<td>%s</td>\n" % value)
             if squad is not None:
