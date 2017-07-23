@@ -86,6 +86,31 @@ def read_models():
     # Done!
     return models
 
+def read_psykers():
+    """ Read in table of models with psychic powers. """
+
+    class Psyker(object):
+        def __init__(self, name):
+            self.name = name
+            self.powers_per_turn = 0
+            self.deny_per_turn = 0
+            self.num_known_powers = 0
+            self.discipline = None
+
+    # Read in each psyker definition from the file.
+    psykers = collections.OrderedDict()
+    with open("data/psykers.csv") as csvfile:
+        reader = csv.DictReader(csvfile)
+        for row in reader:
+            psyker = Psyker(row["Name"])
+            psyker.powers_per_turn = int(row["PowersPerTurn"])
+            psyker.deny_per_turn = int(row["DenyPerTurn"])
+            psyker.num_known_powers = int(row["NumKnownPowers"])
+            psyker.discipline = row["Discipline"]
+            psykers[row["Name"]] = psyker
+
+    return psykers
+
 def read_weapons():
     """ Read all of the weapons into a table. """
 
@@ -161,6 +186,7 @@ COSTS.update(WEAPONS)
 COSTS.update(MODELS)
 FORMATIONS = read_formations()
 ABILITIES = read_abilities()
+PSYKERS = read_psykers()
 
 def lookup_item(item):
     """ Lookup an item in the costs table. """
@@ -183,6 +209,13 @@ def lookup_ability(ability):
         return ABILITIES[ability]
     except KeyError:
         print ("No ability '%s' in abilities table." % ability)
+
+def lookup_psyker(model_name):
+    """ If a model is a psyker lookup its psychic powers. """
+    try:
+        return PSYKERS[model_name]
+    except KeyError:
+        print ("Model '%s' is not a psyker." % model_name)
 
 def army_points_cost(army):
     """ Calculate the total points cost of an army"""
@@ -362,6 +395,26 @@ def write_models_table(outfile, item_names, squad=None):
             first = False
     outfile.write("</table>\n")
 
+def write_psyker_table(outfile, model_name, squad=None):
+    """ Write out psyker info if necessary. """
+
+    # If the model is not a psyker we don't need to write the table!
+    if not model_name in PSYKERS:
+        return
+
+    # Get the psyker stats.
+    psyker = lookup_psyker(model_name)
+
+    # Write the table.
+    outfile.write("<table>\n")
+    outfile.write("<tr>\n")
+    outfile.write("<th class='title'>Psyker</th>\n")
+    outfile.write("</tr>\n")
+    outfile.write("<tr>\n")
+    outfile.write("<td>Can manifest %s and deny %s psychic powers per turn. Knows %s psychic powers from the %s discipline.</td>\n" % (psyker.powers_per_turn, psyker.deny_per_turn, psyker.num_known_powers, psyker.discipline))
+    outfile.write("</tr>\n")
+    outfile.write("</table>\n")
+
 def write_army_header(outfile, army, link=None):
     """ Write the army header. """
     army_name = army["Name"]
@@ -530,6 +583,10 @@ def write_squad(outfile, squad):
             outfile.write("<td><span class='ability_tag'>%s: </span> %s</td>\n" % (ability, lookup_ability(ability).description))
             outfile.write("</tr>\n")
         outfile.write("</table>\n")
+
+    # If the squad contains psykers, write out their info.
+    for model in models:
+        write_psyker_table(outfile, model, squad)
 
     # Done with the squad.
     outfile.write("</div>\n")
