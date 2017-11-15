@@ -15,4 +15,4 @@ Alternatively the 'write_army()' function could be used to serve html as a web
 page, but I've not done anything webby here - the primary purpose of this project
 is as a cost calculator and for quick reference printing.
 
-You can view the most recently generated army lists at https://nathanwoodward.github.io/40k_army_lists/
+You can view the most recently generated army lists at https://nathanrw.github.io/40k_army_lists/
