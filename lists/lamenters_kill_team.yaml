@@ -1,0 +1,62 @@
+Name: Lamenters Kill Team
+Game: Kill Team
+Warlord: Brother Sergeant Rafael
+Points: 100
+Detachments:
+  - Name: Kill Team
+    Type: Kill Team
+    Units:
+
+      - Name: Brother Sergeant Rafael
+        Slot: Troops
+        Items:
+          Intercessor Sergeant: 1
+          Bolt Rifle: 1
+          Frag Grenade: 1
+          Krak Grenade: 1
+
+      - Name: Brother Donatello
+        Slot: Troops
+        Items:
+          Intercessor: 1
+          Bolt Rifle: 1
+          Frag Grenade: 1
+          Krak Grenade: 1
+
+      - Name: Brother Michelangelo
+        Slot: Troops
+        Items:
+          Intercessor: 1
+          Bolt Rifle: 1
+          Frag Grenade: 1
+          Krak Grenade: 1
+
+      - Name: Brother Byron
+        Slot: Troops
+        Items:
+          Intercessor: 1
+          Bolt Rifle: 1
+          Frag Grenade: 1
+          Krak Grenade: 1
+
+      - Name: Brother Shelley
+        Slot: Troops
+        Items:
+          Reiver: 1
+          Combat Knife: 1
+          Heavy Bolt Pistol: 1
+          Frag Grenade: 1
+          Krak Grenade: 1
+          Shock Grenade: 1
+          Grapnel Launcher: 1
+
+      - Name: Brother Caravaggio
+        Slot: Troops
+        Items:
+          Reiver: 1
+          Combat Knife: 1
+          Heavy Bolt Pistol: 1
+          Frag Grenade: 1
+          Krak Grenade: 1
+          Shock Grenade: 1
+          Grapnel Launcher: 1

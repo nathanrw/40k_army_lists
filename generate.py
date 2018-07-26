@@ -24,20 +24,20 @@ import yaml
 import collections
 import re
 
-def read_abilities():
+def read_abilities(filename):
     """ Read all of the abilities into a table. """
     abilities = collections.OrderedDict()
     class Ability(object):
         def __init__(self, name, description):
             self.name = name
             self.description = description
-    with open("data/abilities.csv") as csvfile:
+    with open(filename) as csvfile:
         reader = csv.DictReader(csvfile)
         for row in reader:
             abilities[row["Name"]] = Ability(row["Name"], row["Description"])
     return abilities
 
-def read_models():
+def read_models(filename):
     """ Read all of the models into a table. """
 
     # Store models in 'document order'.
@@ -54,7 +54,7 @@ def read_models():
             self.includes_wargear = False
 
     # Read in each model definition from the file.
-    with open("data/models.csv") as csvfile:
+    with open(filename) as csvfile:
         reader = csv.DictReader(csvfile)
         for row in reader:
 
@@ -111,7 +111,7 @@ def read_psykers():
 
     return psykers
 
-def read_weapons():
+def read_weapons(filename):
     """ Read all of the weapons into a table. """
 
     # We want weapons in 'document order'.
@@ -133,7 +133,7 @@ def read_weapons():
                 return [self]
 
     # Read in the weapons table.
-    with open("data/weapons.csv") as csvfile:
+    with open(filename) as csvfile:
         reader = csv.DictReader(csvfile)
         for row in reader:
 
@@ -179,13 +179,19 @@ def read_formations():
     return formations
 
 # Read in static data.
-WEAPONS = read_weapons()
-MODELS = read_models()
+WEAPONS = read_weapons("data/weapons.csv")
+WEAPONS_KT = read_weapons("data/weapons_kill_team.csv")
+MODELS = read_models("data/models.csv")
+MODELS_KT = read_models("data/models_kill_team.csv")
 COSTS = {}
 COSTS.update(WEAPONS)
 COSTS.update(MODELS)
+COSTS_KT = {}
+COSTS_KT.update(WEAPONS_KT)
+COSTS_KT.update(MODELS_KT)
 FORMATIONS = read_formations()
-ABILITIES = read_abilities()
+ABILITIES = read_abilities("data/abilities.csv")
+ABILITIES_KT = read_abilities("data/abilities_kill_team.csv")
 PSYKERS = read_psykers()
 
 def lookup_item(item):
@@ -613,7 +619,7 @@ def write_army(outfile, army):
     # Write out stat tables for all weapons and models in army. Since
     # we have those in place, I'm not sure how useful this is, so it's
     # switched off for now.
-    write_appendices = False
+    write_appendices = True
     if write_appendices:
         write_models_table(outfile, list_army_models(army))
         write_weapons_table(outfile, list_army_weapons(army))
@@ -668,8 +674,28 @@ def main():
         outfile.write("<body>\n")
         outfile.write("<h1> Army Lists </h1>\n")
         for army in armies:
+            # Make sure we use the right rules.
+            global COSTS
+            global WEAPONS
+            global MODELS
+            global ABILITIES
+            COSTS_OLD = COSTS
+            WEAPONS_OLD = WEAPONS
+            MODELS_OLD = MODELS
+            ABILITIES_OLD = ABILITIES
+            game = army["Game"]
+            if game == "Kill Team":
+                COSTS = COSTS_KT
+                WEAPONS = WEAPONS_KT
+                MODELS = MODELS_KT
+                ABILITIES = ABILITIES_KT
             filename = write_army_file("lists", army)
             write_army_header(outfile, army, filename)
+            # Put the rules back
+            COSTS = COSTS_OLD
+            WEAPONS = WEAPONS_OLD
+            MODELS = MODELS_OLD
+            ABILITIES = ABILITIES_OLD
         outfile.write("</body>\n")
         outfile.write("</html>\n")
 
