@@ -292,7 +292,7 @@ class GameData(object):
     
     def army_cp_total(self, army):
         """ Calculate the total command points available to an army. """
-        total = 0
+        total = 3 # assume battle-forged
         for detachment in army["Detachments"]:
             formation = self.lookup_formation(detachment["Type"])
             total += formation.cp
