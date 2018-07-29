@@ -1,13 +1,14 @@
 Name: Lamenters Kill Team
 Game: Kill Team
-Warlord: Brother Sergeant Rafael
+Warlord: Brother Sergeant Rafaello
 Points: 100
 Detachments:
   - Name: Kill Team
     Type: Kill Team
     Units:
 
-      - Name: Brother Sergeant Rafael
+      - Name: Brother Sergeant Raffaelo
+        Notes: A proud warrior and an artisan of skill comparable to Brother Michelangelo; he covets greater recognition.
         Slot: Troops
         Items:
           Intercessor Sergeant: 1
@@ -18,6 +19,7 @@ Detachments:
           Krak Grenade: 1
 
       - Name: Brother Donatello
+        Notes: Brother Donatello's curious affinity for living in the bilges of the fortress monastery while eating enormous quantities of space pizza still draws less suspicion than the slight green tinge of his skin.
         Slot: Troops
         Items:
           Intercessor Gunner: 1
@@ -27,6 +29,7 @@ Detachments:
           Krak Grenade: 1
 
       - Name: Brother Michelangelo
+        Notes: The reclusiam of the fortress monastery has a painted ceiling unmatched in all of the imperium; this is Brother Michelangelo's finest work, and the source of his fame.
         Slot: Troops
         Items:
           Intercessor: 1
@@ -36,6 +39,7 @@ Detachments:
           Krak Grenade: 1
 
       - Name: Brother Byron
+        Notes: A man of pallid countenance and melancholic disposition, he spends much of his time composing angsty poetry.  Nevertheless, Brother Byron's ferocity in battle is beyond question.
         Slot: Troops
         Items:
           Intercessor: 1
@@ -45,6 +49,7 @@ Detachments:
           Krak Grenade: 1
 
       - Name: Brother Shelley
+        Notes: IT'S ALIIIIIVE
         Slot: Troops
         Items:
           Reiver: 1
@@ -57,6 +62,7 @@ Detachments:
           Grapnel Launcher: 1
 
       - Name: Brother Caravaggio
+        Notes: A talent for painting and a reputation for murder - or is it the other way round?
         Slot: Troops
         Items:
           Reiver: 1

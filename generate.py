@@ -657,6 +657,11 @@ class GameData(object):
             outfile.write("<td>%s</td>\n" % self.squad_points_cost(squad))
             outfile.write("</tr>\n")
         outfile.write("</table>\n")
+
+        # Add notes.
+        notes = squad.get("Notes")
+        if notes is not None:
+            outfile.write("<p class='notes'>%s</p>\n" % notes)
     
         # Write quick reference tables for the squad.
         self.write_models_table(outfile, models, squad)

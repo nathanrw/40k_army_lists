@@ -45,4 +45,11 @@ td, th {
     font-weight: bold;
 }
 
-
+/* The notes on a squad. */
+.notes {
+    padding: 4px;
+    width: 95%;
+    margin: auto;
+    text-align:center;
+    font-style: italic;
+}
