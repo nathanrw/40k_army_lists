@@ -1,14 +1,14 @@
 Name,Cost,Range,Type,S,AP,D,Abilities
 Bolter, 0, 24, Rapid Fire 1, 4, 0, 1, -
 Bolt Pistol, 0, 12, Pistol 1, 4, 0, 1, -
-Heavy Bolt Pistol, 0, 12, Pistol 1, 4, 0, 1, -
-Bolt Carbine, 0, 12, Pistol 1, 4, 0, 1, -
-Bolt Rifle, 0, 12, Pistol 1, 4, 0, 1, -
-Auto Bolt Rifle, 0, 12, Pistol 1, 4, 0, 1, -
-Stalker Bolt Rifle, 0, 12, Pistol 1, 4, 0, 1, -
+Heavy Bolt Pistol, 0, 12, Pistol 1, 4, -1, 1, -
+Bolt Carbine, 0, 24, Assult 2, 4, 0, 1, -
+Bolt Rifle, 0, 30, Rapid Fire 1, 4, -1, 1, -
+Auto Bolt Rifle, 0, 24, Assault 2, 4, 0, 1, -
+Stalker Bolt Rifle, 0, 36, Heavy 1, 4, -2, 1, -
 Frag Grenade, 0, 6, Grenade D6, 3, 0, 1, -
 Krak Grenade, 0, 6, Grenade 1, 6, -1, D3, -
-Shock Grenade, 0, 6, Grenade 1, 6, -1, D3, -
+Shock Grenade, 0, 6, Grenade D3, -, -, -, Any infantry unit hit is stunned: cannot fire overwatch and -1 to hit.
 Chainsword, 0, Melee, Melee, +0, 0, 1, +1 attack with this weapon
 Flamer, 9, 8, Assault D6, 4, 0, 1, Hits automatically
 Missile Launcher [Frag], 25, 48, Heavy D6, 4, 0, 1, -
