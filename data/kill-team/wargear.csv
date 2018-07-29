@@ -1,5 +1,6 @@
 Name,Cost,Abilities
-Camo Cloak,0,Camo Cloaks
+Auspex,1,Auspex
+Camo Cloak,1,Camo Cloaks
 Auxiliary Grenade Launcher,0,Auxiliary Grenade Launcher
-Grav-chute,0,Grav-chute
-Grapnel Launcher,0,Grapnel Launcher
+Grav-chute,1,Grav-chute
+Grapnel Launcher,1,Grapnel Launcher
