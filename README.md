@@ -2,7 +2,7 @@ My 40k Army Lists
 =================
 
 A place to put warhammer 40k army lists and a script, generate.py, to convert
-them into a convenient 'quick reference card' for with cost breakdown and force
+them into a convenient 'quick reference card' with cost breakdown and force
 organisation chart.
 
 To use the script, it should simply be run in this directory. A 'docs'
