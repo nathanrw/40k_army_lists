@@ -11,6 +11,8 @@ Detachments:
         Slot: Troops
         Items:
           Intercessor Sergeant: 1
+          Chainsword: 1
+          Bolt Pistol: 1
           Bolt Rifle: 1
           Frag Grenade: 1
           Krak Grenade: 1
@@ -18,8 +20,9 @@ Detachments:
       - Name: Brother Donatello
         Slot: Troops
         Items:
-          Intercessor: 1
-          Bolt Rifle: 1
+          Intercessor Gunner: 1
+          Bolt Pistol: 1
+          Stalker Bolt Rifle: 1
           Frag Grenade: 1
           Krak Grenade: 1
 
@@ -27,7 +30,8 @@ Detachments:
         Slot: Troops
         Items:
           Intercessor: 1
-          Bolt Rifle: 1
+          Bolt Pistol: 1
+          Auto Bolt Rifle: 1
           Frag Grenade: 1
           Krak Grenade: 1
 
@@ -35,6 +39,7 @@ Detachments:
         Slot: Troops
         Items:
           Intercessor: 1
+          Bolt Pistol: 1
           Bolt Rifle: 1
           Frag Grenade: 1
           Krak Grenade: 1
@@ -48,6 +53,7 @@ Detachments:
           Frag Grenade: 1
           Krak Grenade: 1
           Shock Grenade: 1
+          Grav-chute: 1
           Grapnel Launcher: 1
 
       - Name: Brother Caravaggio
@@ -59,4 +65,5 @@ Detachments:
           Frag Grenade: 1
           Krak Grenade: 1
           Shock Grenade: 1
+          Grav-chute: 1
           Grapnel Launcher: 1

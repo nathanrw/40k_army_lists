@@ -165,6 +165,21 @@ def read_weapons(filename):
     return weapons
 
 
+def read_wargear(filename):
+    """ Read all of the wargear into a table. """
+    wargear = collections.OrderedDict()
+    class Wargear(object):
+        def __init__(self, row):
+            self.name = row["Name"]
+            self.cost = int(row["Cost"])
+            self.abilities = [x.strip() for x in row["Abilities"].split("|")]
+    with open(filename) as csvfile:
+        reader = csv.DictReader(csvfile)
+        for row in reader:
+            wargear[row["Name"]] = Wargear(row)
+    return wargear
+
+
 def read_formations(filename):
     """ Read all of the formations into a table. """
     formations = collections.OrderedDict()
@@ -198,6 +213,7 @@ class GameData(object):
         self.__game = game
         data_dir = os.path.join("data", game.lower().replace(" ", "-"))
         self.__weapons = read_weapons(os.path.join(data_dir, "weapons.csv")) 
+        self.__wargear = read_wargear(os.path.join(data_dir, "wargear.csv"))
         self.__models = read_models(os.path.join(data_dir, "models.csv"))
         self.__formations = read_formations(os.path.join(data_dir, "formations.csv"))
         self.__abilities = read_abilities(os.path.join(data_dir, "abilities.csv"))
@@ -205,6 +221,7 @@ class GameData(object):
         self.__costs = {}
         self.__costs.update(self.__weapons)
         self.__costs.update(self.__models)
+        self.__costs.update(self.__wargear)
         self.__is_kill_team = self.__game == "Kill Team"
 
     def lookup_item(self, item):
@@ -281,7 +298,7 @@ class GameData(object):
             return 0
         total = 0
         for item in squad["Items"]:
-            if item in self.__weapons:
+            if item in self.__weapons or item in self.__wargear:
                 quantity = squad["Items"][item]
                 total += self.lookup_item(item).cost * quantity
         return total
@@ -310,6 +327,18 @@ class GameData(object):
                         weapons.append(item)
         return weapons
 
+    def list_army_wargear(self, army):
+        """ List all of the wargear in the army."""
+        wargear = []
+        seen = set()
+        for detachment in army["Detachments"]:
+            for unit in detachment["Units"]:
+                for item in unit["Items"]:
+                    if item in self.__wargear and not item in seen:
+                        seen.add(item)
+                        wargear.append(item)
+        return wargear
+
     def list_army_models(self, army):
         """ List each distinct model in the army. """
         models = []
@@ -321,6 +350,34 @@ class GameData(object):
                         seen.add(item)
                         models.append(item)
         return models
+
+    def write_wargear_table(self, outfile, item_names, squad=None):
+        if len(item_names) == 0:
+            return
+        wargear_included = squad is not None and self.squad_wargear_included(squad)
+        outfile.write("<table class='weapons_table'>\n")
+        outfile.write("<tr>\n")
+        outfile.write("<th class='title'>Item</th>\n")
+        outfile.write("<th class='title'>Cost</th>\n")
+        if squad is None:
+            outfile.write("<th class='title'>Abilities</th>\n")
+        if squad is not None and not self.__is_kill_team:
+            outfile.write("<th class='title'>Qty</th>\n")
+        outfile.write("</tr>\n")
+        for name in item_names:
+            item = self.lookup_item(name)
+            outfile.write("<tr>\n")
+            outfile.write("<td>%s</td>\n" % name)
+            if wargear_included:
+                outfile.write("<td>-</td>\n")
+            else:
+                outfile.write("<td>%s</td>\n" % item.cost)
+            if squad is None:
+                outfile.write("<td>%s</td>\n" % ", ".join(item.abilities))
+            if squad is not None and not self.__is_kill_team:
+                outfile.write("<td>%s</td>\n" % squad["Items"][name])
+            outfile.write("</tr>\n")
+        outfile.write("</table>\n")
 
     def write_weapons_table(self, outfile, item_names, squad=None):
         """ Write a table of weapons. """
@@ -561,6 +618,7 @@ class GameData(object):
         # Determine weapons and models used in the squad.
         weapons = []
         models = []
+        wargear = []
         abilities = []
         num_models = 0
         for item in squad["Items"]:
@@ -569,6 +627,11 @@ class GameData(object):
             elif item in self.__models and not item in models:
                 models.append(item)
                 num_models += squad["Items"][item]
+                for ability in self.lookup_item(item).abilities:
+                    if not ability in abilities:
+                        abilities.append(ability)
+            elif item in self.__wargear and not item in wargear:
+                wargear.append(item)
                 for ability in self.lookup_item(item).abilities:
                     if not ability in abilities:
                         abilities.append(ability)
@@ -597,6 +660,7 @@ class GameData(object):
     
         # Write quick reference tables for the squad.
         self.write_models_table(outfile, models, squad)
+        self.write_wargear_table(outfile, wargear, squad)
         self.write_weapons_table(outfile, weapons, squad)
     
         # Write out the list of abilities.
@@ -639,6 +703,7 @@ class GameData(object):
     
         # Write out stat tables for all weapons and models in army.
         self.write_models_table(outfile, self.list_army_models(army))
+        self.write_wargear_table(outfile, self.list_army_wargear(army))
         self.write_weapons_table(outfile, self.list_army_weapons(army))
     
         # End of HTML file.
