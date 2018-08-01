@@ -1,22 +1,22 @@
 Name,Cost,Range,Type,S,AP,D,Abilities
-Bolter, 0, 24, Rapid Fire 1, 4, 0, 1, -
-Bolt Pistol, 0, 12, Pistol 1, 4, 0, 1, -
-Frag Grenade, 0, 6, Grenade D6, 3, 0, 1, -
-Krak Grenade, 0, 6, Grenade 1, 6, -1, D3, -
-Chainsword, 0, Melee, Melee, +0, 0, 1, +1 attack with this weapon
-Crozius Arcanum, 0, Melee, Melee, +1, -1, 2, -
-Flamer, 9, 8, Assault D6, 4, 0, 1, Hits automatically
-Missile Launcher [Frag], 25, 48, Heavy D6, 4, 0, 1, -
-Missile Launcher [Krak], 25, 48, Heavy 1, 8, -2, D6, -
-Storm Bolter, 2, 24, Rapid Fire 2, 4, 0, 1, -
-Force Axe, 16, Melee, Melee, +1, -2, D3, -
-Power Sword, 4, Melee, Melee, +0, -3, 1, -
-Power Fist, 20, Melee, Melee, x2, -3, D3, Subtract 1 from to hit roll.
-Twin Assault Cannon, 35, 24, Heavy 12, 6, -1, 1, -
-Heavy Flamer, 17, 8, Heavy D6, 5, -1, 1, Hits automatically
+Bolter, 0, 24, Rapid Fire 1, 4, 0, 1,
+Bolt Pistol, 0, 12, Pistol 1, 4, 0, 1,
+Frag Grenade, 0, 6, Grenade D6, 3, 0, 1,
+Krak Grenade, 0, 6, Grenade 1, 6, -1, D3,
+Chainsword, 0, Melee, Melee, +0, 0, 1, Chainsword
+Crozius Arcanum, 0, Melee, Melee, +1, -1, 2,
+Flamer, 9, 8, Assault D6, 4, 0, 1, Flamer
+Missile Launcher [Frag], 25, 48, Heavy D6, 4, 0, 1,
+Missile Launcher [Krak], 25, 48, Heavy 1, 8, -2, D6,
+Storm Bolter, 2, 24, Rapid Fire 2, 4, 0, 1,
+Force Axe, 16, Melee, Melee, +1, -2, D3,
+Power Sword, 4, Melee, Melee, +0, -3, 1,
+Power Fist, 20, Melee, Melee, x2, -3, D3, Power Fist
+Twin Assault Cannon, 35, 24, Heavy 12, 6, -1, 1,
+Heavy Flamer, 17, 8, Heavy D6, 5, -1, 1, Flamer
 Furioso Fist (Single), 40, Melee, Melee, x2, -3, 3, -
-Furioso Fist (Pair), 50, Melee, Melee, x2, -3, 3, Re-roll failed hit rolls. (And it's two weapons.)
-Meltagun, 17, 12, Assault 1, 8, -4, D6, If half range roll 2 damage dice and pick highest.
-Sniper Rifle, 4, 36, Heavy 1, 4, 0, 1, Target character even if not closest. Additional mortal wound on 6+ wounding roll.
+Furioso Fist (Pair), 50, Melee, Melee, x2, -3, 3, Furioso Fist (Pair)
+Meltagun, 17, 12, Assault 1, 8, -4, D6, Meltagun
+Sniper Rifle, 4, 36, Heavy 1, 4, 0, 1, Sniper Rifle
 Blood Song [Master-crafted boltgun], 0, 24, Rapid Fire 1, 4, -1, 2, Combi-weapon
-Blood Song [Meltagun], 0, 12, Assault 1, 8, -4, D6, Combi-weapon. Roll 2D6 for damage and pick highest if within half range.
+Blood Song [Meltagun], 0, 12, Assault 1, 8, -4, D6, Combi-weapon | Meltagun

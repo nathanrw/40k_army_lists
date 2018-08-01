@@ -130,6 +130,7 @@ def read_weapons(filename):
             self.stats["Name"] = name
             self.stats["Cost"] = cost
             self.modes = []
+            self.abilities = []
         def get_modes(self):
             if len(self.modes) > 0:
                 return self.modes
@@ -145,7 +146,7 @@ def read_weapons(filename):
             name = row["Name"]
             cost = int(row["Cost"])
             weapon = Weapon(name, cost)
-            stats = ["Name", "Cost", "Range", "Type", "S", "AP", "D", "Abilities"]
+            stats = ["Name", "Cost", "Range", "Type", "S", "AP", "D"]
             for stat in stats:
                 weapon.stats[stat] = row[stat]
 
@@ -160,6 +161,15 @@ def read_weapons(filename):
                 weapons[base_name].modes.append(weapon)
             else:
                 weapons[name] = weapon
+
+            # Extract the abilities
+            weapon.abilities = [x.strip() for x in row["Abilities"].split("|")]
+            if "" in weapon.abilities: weapon.abilities.remove("")
+
+            # Add a string representing the abilities to the stats map.
+            abilities_str = ", ".join(weapon.abilities)
+            if len(abilities_str) == 0: abilities_str = "-"
+            weapon.stats["Abilities"] = abilities_str
 
     # Phew, we're done.
     return weapons
@@ -351,6 +361,20 @@ class GameData(object):
                         models.append(item)
         return models
 
+    def list_army_abilities(self, army):
+        """ List each distinct ability in the army. """
+        abilities = []
+        seen = set()
+        for detachment in army["Detachments"]:
+            for unit in detachment["Units"]:
+                for name in unit["Items"]:
+                    item = self.__costs[name]
+                    for ability in item.abilities:
+                        if not ability in seen:
+                            seen.add(ability)
+                            abilities.append(ability)
+        return abilities
+
     def write_wargear_table(self, outfile, item_names, squad=None):
         if len(item_names) == 0:
             return
@@ -364,7 +388,7 @@ class GameData(object):
         if squad is not None and not self.__is_kill_team:
             outfile.write("<th class='title'>Qty</th>\n")
         outfile.write("</tr>\n")
-        for name in item_names:
+        for name in sorted(item_names):
             item = self.lookup_item(name)
             outfile.write("<tr>\n")
             outfile.write("<td>%s</td>\n" % name)
@@ -384,7 +408,9 @@ class GameData(object):
         if len (item_names) == 0:
             return
         wargear_included = squad is not None and self.squad_wargear_included(squad)
-        stats = ["Name", "Cost", "Range", "Type", "S", "AP", "D", "Abilities"]
+        stats = ["Name", "Cost", "Range", "Type", "S", "AP", "D"]
+        if squad is None:
+            stats.append("Abilities")
         outfile.write("<table class='weapons_table'>\n")
         outfile.write("<tr>\n")
         for stat in stats:
@@ -393,7 +419,7 @@ class GameData(object):
         if squad is not None and not self.__is_kill_team:
             outfile.write("<th class='title'>Qty</th>\n")
         outfile.write("</tr>\n")
-        for name in item_names:
+        for name in sorted(item_names):
             item = self.lookup_item(name)
             modes = item.get_modes()
     
@@ -447,7 +473,7 @@ class GameData(object):
         if squad is not None and not self.__is_kill_team:
             outfile.write("<th class='title'>Qty</th>\n")
         outfile.write("</tr>\n")
-        for name in item_names:
+        for name in sorted(item_names):
             item = self.lookup_item(name)
             variants = [item]
             for (threshold, variant) in item.damage_variants:
@@ -471,6 +497,20 @@ class GameData(object):
                     outfile.write("<td>%s</td>\n" % value)
                 outfile.write("</tr>\n")
                 first = False
+        outfile.write("</table>\n")
+
+    def write_abilities_table(self, outfile, abilities, squad=None):
+        # Write out the list of abilities.
+        if len(abilities) == 0:
+            return
+        outfile.write("<table>\n")
+        outfile.write("<tr>\n")
+        outfile.write("<th class='title' colspan='2'>Abilities</th>\n")
+        outfile.write("</tr>\n")
+        for ability in sorted(abilities):
+            outfile.write("<tr>\n")
+            outfile.write("<td><span class='ability_tag'>%s: </span> %s</td>\n" % (ability, self.lookup_ability(ability).description))
+            outfile.write("</tr>\n")
         outfile.write("</table>\n")
 
     def write_psyker_table(self, outfile, model_name, squad=None):
@@ -627,14 +667,11 @@ class GameData(object):
             elif item in self.__models and not item in models:
                 models.append(item)
                 num_models += squad["Items"][item]
-                for ability in self.lookup_item(item).abilities:
-                    if not ability in abilities:
-                        abilities.append(ability)
             elif item in self.__wargear and not item in wargear:
                 wargear.append(item)
-                for ability in self.lookup_item(item).abilities:
-                    if not ability in abilities:
-                        abilities.append(ability)
+            for ability in self.lookup_item(item).abilities:
+                if not ability in abilities:
+                    abilities.append(ability)
     
         # Start the squad.
         outfile.write("<div class='squad'>\n")
@@ -667,18 +704,7 @@ class GameData(object):
         self.write_models_table(outfile, models, squad)
         self.write_wargear_table(outfile, wargear, squad)
         self.write_weapons_table(outfile, weapons, squad)
-    
-        # Write out the list of abilities.
-        if len(abilities) > 0:
-            outfile.write("<table>\n")
-            outfile.write("<tr>\n")
-            outfile.write("<th class='title' colspan='2'>Abilities</th>\n")
-            outfile.write("</tr>\n")
-            for ability in abilities:
-                outfile.write("<tr>\n")
-                outfile.write("<td><span class='ability_tag'>%s: </span> %s</td>\n" % (ability, self.lookup_ability(ability).description))
-                outfile.write("</tr>\n")
-            outfile.write("</table>\n")
+        self.write_abilities_table(outfile, abilities, squad)
     
         # If the squad contains psykers, write out their info.
         for model in models:
@@ -710,6 +736,7 @@ class GameData(object):
         self.write_models_table(outfile, self.list_army_models(army))
         self.write_wargear_table(outfile, self.list_army_wargear(army))
         self.write_weapons_table(outfile, self.list_army_weapons(army))
+        self.write_abilities_table(outfile, self.list_army_abilities(army))
     
         # End of HTML file.
         outfile.write("</body>\n")

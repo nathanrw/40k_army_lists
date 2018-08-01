@@ -5,3 +5,10 @@ Terror Troops,Enemy models within 3 suffer -1 leadership
 Auxiliary Grenade Launcher,Grenade range is 30"
 Grav-chute,Never suffers fall damage and never falls on another model
 Grapnel Launcher,Climb any distance vertically when moving
+Shock Grenade,Hit infantry -1 to hit and no overwatch.
+Chainsword,+1 attack with this weapon
+Combat Knife,+1 attack with this weapon
+Flamer,Hits automatically
+Power Fist,Subtract 1 from to hit roll.
+Meltagun,If half range roll 2 damage dice and pick highest.
+Sniper Rifle,Target character even if not closest. Additional mortal wound on 6+ wounding roll.
