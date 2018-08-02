@@ -47,9 +47,16 @@ td, th {
 
 /* The notes on a squad. */
 .notes {
-    padding: 4px;
-    width: 95%;
+    padding: 16px;
+    width: 90%;
     margin: auto;
     text-align:center;
     font-style: italic;
+}
+
+/* The inline costs on a squad. */
+.inline_costs {
+    padding: 4px;
+    width: 95%;
+    margin: auto;
 }

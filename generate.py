@@ -382,7 +382,8 @@ class GameData(object):
         outfile.write("<table class='weapons_table'>\n")
         outfile.write("<tr>\n")
         outfile.write("<th class='title'>Item</th>\n")
-        outfile.write("<th class='title'>Cost</th>\n")
+        if squad is None or not self.__is_kill_team:
+	    outfile.write("<th class='title'>Cost</th>\n")
         if squad is None:
             outfile.write("<th class='title'>Abilities</th>\n")
         if squad is not None and not self.__is_kill_team:
@@ -392,10 +393,11 @@ class GameData(object):
             item = self.lookup_item(name)
             outfile.write("<tr>\n")
             outfile.write("<td>%s</td>\n" % name)
-            if wargear_included:
-                outfile.write("<td>-</td>\n")
-            else:
-                outfile.write("<td>%s</td>\n" % item.cost)
+            if squad is None or not self.__is_kill_team:
+                if wargear_included:
+                    outfile.write("<td>-</td>\n")
+                else:
+                    outfile.write("<td>%s</td>\n" % item.cost)
             if squad is None:
                 outfile.write("<td>%s</td>\n" % ", ".join(item.abilities))
             if squad is not None and not self.__is_kill_team:
@@ -411,6 +413,8 @@ class GameData(object):
         stats = ["Name", "Cost", "Range", "Type", "S", "AP", "D"]
         if squad is None:
             stats.append("Abilities")
+        if self.__is_kill_team and squad is not None:
+            stats.remove("Cost")
         outfile.write("<table class='weapons_table'>\n")
         outfile.write("<tr>\n")
         for stat in stats:
@@ -465,6 +469,8 @@ class GameData(object):
         if len (item_names) == 0:
             return
         stats = ["Name", "Cost", "M", "WS", "BS", "S", "T", "W", "A", "Ld", "Sv"]
+        if self.__is_kill_team and squad is not None:
+            stats.remove("Cost")
         outfile.write("<table class='models_table'>\n")
         outfile.write("<tr>\n")
         for stat in stats:
@@ -699,10 +705,23 @@ class GameData(object):
         notes = squad.get("Notes")
         if notes is not None:
             outfile.write("<p class='notes'>%s</p>\n" % notes)
-    
+
+        # Save space by writing costs as a list.
+        if self.__is_kill_team:
+            assert len(models) == 1
+            outfile.write("<p class='inline_costs'>\n")
+            model = self.lookup_item(models[0])
+            text = "%s (%spts) with " % (model.name, model.cost)
+            items = [self.lookup_item(item_name) for item_name in (weapons + wargear)]
+            items_strs = ["%s (%spts)" % (item.name, item.cost) for item in items]
+            text += ", ".join(items_strs)
+            outfile.write(text + "\n")
+            outfile.write("</p>\n")
+            
         # Write quick reference tables for the squad.
         self.write_models_table(outfile, models, squad)
-        self.write_wargear_table(outfile, wargear, squad)
+        if not self.__is_kill_team:
+            self.write_wargear_table(outfile, wargear, squad)
         self.write_weapons_table(outfile, weapons, squad)
         self.write_abilities_table(outfile, abilities, squad)
     
