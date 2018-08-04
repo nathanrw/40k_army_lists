@@ -10,6 +10,8 @@ Detachments:
       - Name: Brother Sergeant Raffaelo
         Notes: A proud warrior and an artisan of skill comparable to Brother Michelangelo; he covets greater recognition.
         Slot: Troops
+        Specialist: Leader
+        Level: 1
         Items:
           Intercessor Sergeant: 1
           Chainsword: 1
@@ -21,6 +23,8 @@ Detachments:
       - Name: Brother Donatello
         Notes: Brother Donatello's curious affinity for living in the bilges of the fortress monastery while eating enormous quantities of space pizza still draws less suspicion than the slight green tinge of his skin.
         Slot: Troops
+        Specialist: Sniper
+        Level: 1
         Items:
           Intercessor Gunner: 1
           Bolt Pistol: 1
@@ -42,6 +46,8 @@ Detachments:
       - Name: Brother Byron
         Notes: A man of pallid countenance and melancholic disposition, he spends much of his time composing angsty poetry.  Nevertheless, Brother Byron's ferocity in battle is beyond question.
         Slot: Troops
+        Specialist: Comms
+        Level: 1
         Items:
           Intercessor: 1
           Bolt Pistol: 1
@@ -65,6 +71,8 @@ Detachments:
       - Name: Brother Caravaggio
         Notes: A talent for painting and a reputation for murder - or is it the other way round?
         Slot: Troops
+        Specialist: Combat
+        Level: 1
         Items:
           Reiver: 1
           Combat Knife: 1

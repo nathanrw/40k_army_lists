@@ -678,6 +678,11 @@ class GameData(object):
             for ability in self.lookup_item(item).abilities:
                 if not ability in abilities:
                     abilities.append(ability)
+        if "Specialist" in squad:
+            specialist = squad["Specialist"]
+            level = squad.get("Level", 1)
+            for i in range(1, level+1):
+                abilities.append("%s (%s)" % (specialist, i))
     
         # Start the squad.
         outfile.write("<div class='squad'>\n")

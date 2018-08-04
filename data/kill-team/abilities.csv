@@ -12,3 +12,7 @@ Flamer,Hits automatically
 Power Fist,Subtract 1 from to hit roll.
 Meltagun,If half range roll 2 damage dice and pick highest.
 Sniper Rifle,Target character even if not closest. Additional mortal wound on 6+ wounding roll.
+Leader (1),+1CP per turn if unshaken
+Sniper (1),Re-roll to-hit rolls of 1
+Combat (1),+1 attack
+Comms (1),+1 to-hit for 1 modle within 6'', once per shooting phase.
