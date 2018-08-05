@@ -218,6 +218,59 @@ def read_armies(dirname):
     return armies
 
 
+class Table(object):
+    def __init__(self):
+        self.__columns = []
+        self.__indices = {}
+        self.__names = {}
+        self.__rows = []
+        self.__styles = {}
+        self.__table_class = None
+        self.__default_column_class = None
+        self.__cell_styles = {}
+    def add_column(self, column_id):
+        assert len(self.__rows) == 0
+        assert not column_id in self.__indices
+        self.__columns.append(column_id)
+        self.__indices[column_id] = len(self.__columns)-1
+        if self.__default_column_class is not None:
+            self.__styles[column_id] = self.__default_column_class
+    def set_default_column_class(self, column_class):
+        self.__default_column_class = column_class
+    def set_table_class(self, table_class):
+        self.__table_class = table_class
+    def set_column_name(self, column_id, column_name):
+        self.__names[column_id] = column_name
+    def set_column_class(self, column_id, column_class):
+        self.__styles[column_id] = column_class
+    def add_row(self):
+        self.__rows.append(["-"] * len(self.__columns))
+    def set_cell(self, column_id, text, style=None):
+        if column_id in self.__indices:
+            if style is not None:
+                self.__cell_styles[(column_id, len(self.__rows)-1)] = style
+            self.__rows[-1][self.__indices[column_id]] = text
+    def write(self, outfile):
+        if self.__table_class is not None:
+            outfile.write("<table class='%s'>\n" % self.__table_class)
+        else:
+            outfile.write("<table>\n")
+        outfile.write("<tr>\n")
+        for column_id in self.__columns:
+            name = self.__names.get(column_id, column_id)
+            outfile.write("<th class='title'>%s</th>\n" % name)
+        outfile.write("</tr>\n")
+        for rowi, row in enumerate(self.__rows):
+            outfile.write("<tr>\n")
+            for i, cell in enumerate(row):
+                column_id = self.__columns[i]
+                style = self.__styles.get(column_id, 'stat')
+                style = self.__cell_styles.get((column_id, rowi), style)
+                outfile.write("<td class='%s'>%s</td>\n" % (style, cell))
+            outfile.write("</tr>\n")
+        outfile.write("</table>\n")
+
+
 class GameData(object):
     def __init__(self, game):
         self.__game = game
@@ -262,6 +315,17 @@ class GameData(object):
             return self.__psykers[model_name]
         except KeyError:
             print ("Model '%s' is not a psyker." % model_name)
+
+    def lookup_buff(self, squad, stat_name, item):
+        """ Lookup a buff for a stat. """
+        if squad is None:
+            return None
+        if self.__is_kill_team:
+            abilities = self.list_squad_abilities(squad)
+            if stat_name == "Range" and (item.name == "Frag Grenade" or item.name == "Krak Grenade"):
+                if "Auxiliary Grenade Launcher" in abilities:
+                    return 30
+        return None
 
     def army_points_cost(self, army):
         """ Calculate the total points cost of an army"""
@@ -375,54 +439,67 @@ class GameData(object):
                             abilities.append(ability)
         return abilities
 
+    def list_squad_abilities(self, squad):
+        """ List each ability in a squad. """
+        abilities = []
+        for item in squad["Items"]:
+            for ability in self.lookup_item(item).abilities:
+                if not ability in abilities:
+                    abilities.append(ability)
+        if "Specialist" in squad and self.__is_kill_team:
+            specialist = squad["Specialist"]
+            level = squad.get("Level", 1)
+            for i in range(1, level+1):
+                abilities.append("%s (%s)" % (specialist, i))
+        return abilities
+
     def write_wargear_table(self, outfile, item_names, squad=None):
         if len(item_names) == 0:
             return
+        table = Table()
+        table.set_table_class("weapons_table")
+        table.set_default_column_class("stat-centre")
+        table.add_column("Item")
         wargear_included = squad is not None and self.squad_wargear_included(squad)
-        outfile.write("<table class='weapons_table'>\n")
-        outfile.write("<tr>\n")
-        outfile.write("<th class='title'>Item</th>\n")
-        if squad is None or not self.__is_kill_team:
-	    outfile.write("<th class='title'>Cost</th>\n")
+        if squad is None or not self.__is_kill_team and not wargear_included:
+            table.add_column("Cost")
         if squad is None:
-            outfile.write("<th class='title'>Abilities</th>\n")
+            table.add_column("Abilities")
         if squad is not None and not self.__is_kill_team:
-            outfile.write("<th class='title'>Qty</th>\n")
-        outfile.write("</tr>\n")
+            table.add_column("Qty")
+        table.set_column_class("Item", "stat-left")
+        table.set_column_class("Abilities", "stat-left")
         for name in sorted(item_names):
             item = self.lookup_item(name)
-            outfile.write("<tr>\n")
-            outfile.write("<td>%s</td>\n" % name)
-            if squad is None or not self.__is_kill_team:
-                if wargear_included:
-                    outfile.write("<td>-</td>\n")
-                else:
-                    outfile.write("<td>%s</td>\n" % item.cost)
-            if squad is None:
-                outfile.write("<td>%s</td>\n" % ", ".join(item.abilities))
-            if squad is not None and not self.__is_kill_team:
-                outfile.write("<td>%s</td>\n" % squad["Items"][name])
-            outfile.write("</tr>\n")
-        outfile.write("</table>\n")
+            table.add_row()
+            table.set_cell("Item", name)
+            table.set_cell("Cost", item.cost)
+            table.set_cell("Abilities", ", ".join(item.abilities))
+            table.set_cell("Qty", "-" if squad is None else squad["Items"][name])
+        table.write(outfile)
 
     def write_weapons_table(self, outfile, item_names, squad=None):
         """ Write a table of weapons. """
         if len (item_names) == 0:
             return
         wargear_included = squad is not None and self.squad_wargear_included(squad)
-        stats = ["Name", "Cost", "Range", "Type", "S", "AP", "D"]
-        if squad is None:
-            stats.append("Abilities")
-        if self.__is_kill_team and squad is not None:
-            stats.remove("Cost")
-        outfile.write("<table class='weapons_table'>\n")
-        outfile.write("<tr>\n")
+        stats = ["Name", "Cost", "Range", "Type", "S", "AP", "D", "Abilities"]
+
+        table = Table()
+        table.set_table_class("weapons_table")
+        table.set_default_column_class("stat-centre")
         for stat in stats:
-            if stat == "Name": stat = "Weapon"
-            outfile.write("<th class='title'>%s</th>\n" % stat)
+            if squad is not None and stat == "Abilities": 
+                continue
+            if self.__is_kill_team and squad is not None and stat == "Cost": 
+                continue
+            table.add_column(stat)
         if squad is not None and not self.__is_kill_team:
-            outfile.write("<th class='title'>Qty</th>\n")
-        outfile.write("</tr>\n")
+            table.add_column("Qty")
+        table.set_column_name("Name", "Weapon")
+        table.set_column_class("Name", "stat-left")
+        table.set_column_class("Abilities", "stat-left")
+
         for name in sorted(item_names):
             item = self.lookup_item(name)
             modes = item.get_modes()
@@ -431,7 +508,7 @@ class GameData(object):
             # the cost and quantity.
             multiple_modes = len(modes) > 1
             if multiple_modes:
-                outfile.write("<tr>\n")
+                table.add_row()
                 for stat in stats:
                     value = ""
                     if stat != "Cost" and stat != "Name":
@@ -441,44 +518,43 @@ class GameData(object):
                             value = "-"
                         else:
                             value = item.stats[stat]
-                    outfile.write("<td>%s</td>\n" % value)
-                if squad is not None and not self.__is_kill_team:
-                    outfile.write("<td>%s</td>\n" % squad["Items"][name])
-                outfile.write("</tr>\n")
+                    table.set_cell(stat, value)
+                table.set_cell("Qty", "-" if squad is None else squad["Items"][name])
     
             # Write out the stats for the weapon. If we've already written the
             # cost and quantity (because there are multiple modes) then we dont
             # want to do it again.
             for mode in modes:
-                outfile.write("<tr>\n")
+                table.add_row()
                 for stat in stats:
+                    style=None
                     value = mode.stats[stat]
+                    buffed_value = self.lookup_buff(squad, stat, mode)
+                    if buffed_value is not None:
+                        value = buffed_value
+                        style = "stat-buffed"
                     if stat == "Cost" and (multiple_modes or wargear_included):
                         value = "-"
-                    outfile.write("<td>%s</td>\n" % value)
-                if squad is not None and not self.__is_kill_team:
-                    value = "-"
-                    if not multiple_modes:
-                        value = squad["Items"][name]
-                    outfile.write("<td>%s</td>\n" % value)
-                outfile.write("</tr>\n")
-        outfile.write("</table>\n")
+                    table.set_cell(stat, value, style)
+                table.set_cell("Qty", "-" if (multiple_modes or squad is None) else squad["Items"][name])
+        table.write(outfile)
 
     def write_models_table(self, outfile, item_names, squad=None):
         """ Write a table of models. """
         if len (item_names) == 0:
             return
+        table = Table()
+        table.set_table_class("models_table")
+        table.set_default_column_class("stat-centre")
         stats = ["Name", "Cost", "M", "WS", "BS", "S", "T", "W", "A", "Ld", "Sv"]
-        if self.__is_kill_team and squad is not None:
-            stats.remove("Cost")
-        outfile.write("<table class='models_table'>\n")
-        outfile.write("<tr>\n")
         for stat in stats:
-            if stat == "Name": stat = "Model"
-            outfile.write("<th class='title'>%s</th>\n" % stat)
+            if stat == "Cost" and (self.__is_kill_team and squad is not None): continue
+            table.add_column(stat)
+        table.set_column_name("Name", "Model")
         if squad is not None and not self.__is_kill_team:
-            outfile.write("<th class='title'>Qty</th>\n")
-        outfile.write("</tr>\n")
+            table.add_column("Qty")
+        table.set_column_class("Name", "stat-left")
+        table.set_column_class("Abilities", "stat-left")
         for name in sorted(item_names):
             item = self.lookup_item(name)
             variants = [item]
@@ -486,7 +562,7 @@ class GameData(object):
                 variants.append(variant)
             first = True
             for variant in variants:
-                outfile.write("<tr>\n")
+                table.add_row()
                 for stat in stats:
                     value = variant.stats[stat]
                     if stat in ("WS", "BS", "Sv"):
@@ -495,15 +571,10 @@ class GameData(object):
                         value += "''"
                     elif stat == "Cost" and not first:
                         value = "-"
-                    outfile.write("<td>%s</td>\n" % value)
-                if squad is not None and not self.__is_kill_team:
-                    value = "-"
-                    if first:
-                        value = squad["Items"][name]
-                    outfile.write("<td>%s</td>\n" % value)
-                outfile.write("</tr>\n")
+                    table.set_cell(stat, value)
+                table.set_cell("Qty", "-" if (first or squad is None) else squad["Items"][name])
                 first = False
-        outfile.write("</table>\n")
+        table.write(outfile)
 
     def write_abilities_table(self, outfile, abilities, squad=None):
         # Write out the list of abilities.
@@ -515,7 +586,7 @@ class GameData(object):
         outfile.write("</tr>\n")
         for ability in sorted(abilities):
             outfile.write("<tr>\n")
-            outfile.write("<td><span class='ability_tag'>%s: </span> %s</td>\n" % (ability, self.lookup_ability(ability).description))
+            outfile.write("<td class='stat-left'><span class='ability_tag'>%s: </span> %s</td>\n" % (ability, self.lookup_ability(ability).description))
             outfile.write("</tr>\n")
         outfile.write("</table>\n")
 
@@ -530,14 +601,12 @@ class GameData(object):
         psyker = self.lookup_psyker(model_name)
     
         # Write the table.
-        outfile.write("<table>\n")
-        outfile.write("<tr>\n")
-        outfile.write("<th class='title'>Psyker</th>\n")
-        outfile.write("</tr>\n")
-        outfile.write("<tr>\n")
-        outfile.write("<td>Can manifest %s and deny %s psychic powers per turn. Knows %s psychic powers from the %s discipline.</td>\n" % (psyker.powers_per_turn, psyker.deny_per_turn, psyker.num_known_powers, psyker.discipline))
-        outfile.write("</tr>\n")
-        outfile.write("</table>\n")
+        text = "Can manifest %s and deny %s psychic powers per turn. Knows %s psychic powers from the %s discipline." % (psyker.powers_per_turn, psyker.deny_per_turn, psyker.num_known_powers, psyker.discipline)
+        table = Table()
+        table.add_column("Psyker")
+        table.add_row()
+        table.set_cell("Psyker", text)
+        table.write(outfile)
 
     def write_army_header(self, outfile, army, link=None):
         """ Write the army header. """
@@ -665,7 +734,6 @@ class GameData(object):
         weapons = []
         models = []
         wargear = []
-        abilities = []
         num_models = 0
         for item in squad["Items"]:
             if item in self.__weapons and not item in weapons:
@@ -675,14 +743,7 @@ class GameData(object):
                 num_models += squad["Items"][item]
             elif item in self.__wargear and not item in wargear:
                 wargear.append(item)
-            for ability in self.lookup_item(item).abilities:
-                if not ability in abilities:
-                    abilities.append(ability)
-        if "Specialist" in squad:
-            specialist = squad["Specialist"]
-            level = squad.get("Level", 1)
-            for i in range(1, level+1):
-                abilities.append("%s (%s)" % (specialist, i))
+        abilities = self.list_squad_abilities(squad)
     
         # Start the squad.
         outfile.write("<div class='squad'>\n")

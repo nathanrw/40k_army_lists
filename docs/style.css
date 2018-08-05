@@ -17,6 +17,20 @@ table {
 td, th {
     padding: 4px;
 }
+.stat-centre {
+    text-align: center;
+}
+.stat-buffed {
+    text-align: center;
+    color: #33ff33;
+    font-weight: bold;
+}
+.stat-left {
+    text-align: left;
+}
+.stat-right {
+    text-align: right;
+}
 .title {
     background-color: #000000;
     color: #ffffff;
