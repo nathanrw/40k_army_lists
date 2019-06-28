@@ -252,23 +252,63 @@ class Table(object):
             self.__rows[-1][self.__indices[column_id]] = text
     def write(self, outfile):
         if self.__table_class is not None:
-            outfile.write("<table class='%s'>\n" % self.__table_class)
+            outfile.start_tag("table", "class='%s'" % self.__table_class)
         else:
-            outfile.write("<table>\n")
-        outfile.write("<tr>\n")
+            outfile.start_tag("table")
+        outfile.start_tag("tr")
         for column_id in self.__columns:
             name = self.__names.get(column_id, column_id)
-            outfile.write("<th class='title'>%s</th>\n" % name)
-        outfile.write("</tr>\n")
+            outfile.content("<th class='title'>%s</th>" % name)
+        outfile.end_tag() # tr
         for rowi, row in enumerate(self.__rows):
-            outfile.write("<tr>\n")
+            outfile.start_tag("tr")
             for i, cell in enumerate(row):
                 column_id = self.__columns[i]
                 style = self.__styles.get(column_id, 'stat')
                 style = self.__cell_styles.get((column_id, rowi), style)
-                outfile.write("<td class='%s'>%s</td>\n" % (style, cell))
-            outfile.write("</tr>\n")
-        outfile.write("</table>\n")
+                outfile.content("<td class='%s'>%s</td>" % (style, cell))
+            outfile.end_tag() # tr
+        outfile.end_tag() # table
+
+
+class Outfile(object):
+    def __init__(self, f):
+        self.f = f
+        self.stack = []
+        self.tabsize = 4
+
+    def pad(self):
+        return " " * len(self.stack) * self.tabsize
+
+    def write(self, *args, **kwargs):
+        self.f.write(*args, **kwargs)
+
+    def start_tag(self, tag, rest=""):
+        self.write(self.pad())
+        self.write("<%s %s>\n" % (tag, rest))
+        self.stack.append(tag)
+
+    def content(self, content):
+        lines = content.split("\n")
+        for line in lines:
+            self.write(self.pad())
+            self.write(line)
+            self.write("\n")
+
+    def end_tag(self):
+        tag = self.stack.pop(len(self.stack)-1)
+        self.write(self.pad())
+        self.write("</%s>\n" % tag)
+        
+    def oneliner(self, tag, **kwargs):
+        extra = kwargs.get("extra", "")
+        content = kwargs.get("content", "")
+        text = "<%s %s>%s</%s>" % (tag, extra, content, tag)
+        self.content(text)
+
+    def comment(self, comment):
+        self.write("\n")
+        self.content("<!-- %s -->" % comment)
 
 
 class GameData(object):
@@ -456,6 +496,7 @@ class GameData(object):
     def write_wargear_table(self, outfile, item_names, squad=None):
         if len(item_names) == 0:
             return
+        outfile.comment("Wargear")
         table = Table()
         table.set_table_class("weapons_table")
         table.set_default_column_class("stat-centre")
@@ -482,6 +523,7 @@ class GameData(object):
         """ Write a table of weapons. """
         if len (item_names) == 0:
             return
+        outfile.comment("Weapons")
         wargear_included = squad is not None and self.squad_wargear_included(squad)
         stats = ["Name", "Cost", "Range", "Type", "S", "AP", "D", "Abilities"]
 
@@ -543,6 +585,7 @@ class GameData(object):
         """ Write a table of models. """
         if len (item_names) == 0:
             return
+        outfile.comment("Models")
         table = Table()
         table.set_table_class("models_table")
         table.set_default_column_class("stat-centre")
@@ -580,15 +623,12 @@ class GameData(object):
         # Write out the list of abilities.
         if len(abilities) == 0:
             return
-        outfile.write("<table>\n")
-        outfile.write("<tr>\n")
-        outfile.write("<th class='title' colspan='2'>Abilities</th>\n")
-        outfile.write("</tr>\n")
+        outfile.comment("Abilities")
+        outfile.start_tag("table")
+        outfile.content("<tr><th class='title' colspan='2'>Abilities</th></tr>")
         for ability in sorted(abilities):
-            outfile.write("<tr>\n")
-            outfile.write("<td class='stat-left'><span class='ability_tag'>%s: </span> %s</td>\n" % (ability, self.lookup_ability(ability).description))
-            outfile.write("</tr>\n")
-        outfile.write("</table>\n")
+            outfile.content("<tr><td class='stat-left'><span class='ability_tag'>%s: </span> %s</td></tr>" % (ability, self.lookup_ability(ability).description))
+        outfile.end_tag() # table
 
     def write_psyker_table(self, outfile, model_name, squad=None):
         """ Write out psyker info if necessary. """
@@ -606,82 +646,86 @@ class GameData(object):
         table.add_column("Psyker")
         table.add_row()
         table.set_cell("Psyker", text)
+        outfile.comment("Psyker")
         table.write(outfile)
 
     def write_army_header(self, outfile, army, link=None):
         """ Write the army header. """
         army_name = army["Name"]
+        outfile.comment(army_name)
         if link is not None:
             army_name = "<a href='%s'>%s</a>" % (link, army_name)
         limit = army["Points"]
         total = self.army_points_cost(army)
         cp_total = self.army_cp_total(army)
         warlord = army["Warlord"]
-        outfile.write("<div class='army_header'>\n")
-        outfile.write("<table class='army_table'>\n")
-        outfile.write("<tr><th colspan='2' class='title'>%s</th></tr>\n" % army_name)
-        outfile.write("<tr><th>Warlord</th><td>%s</td></tr>\n" % warlord)
-        outfile.write("<tr><th>Points limit</th><td>%s</td></tr>\n" % limit)
-        outfile.write("<tr><th>Points total</th><td>%s</td></tr>\n" % total)
-        outfile.write("<tr><th>Points to spare</th><td>%s</td></tr>\n" % (limit - total))
-        outfile.write("<tr><th>CP</td><td>%s</th></tr>\n" % cp_total)
-        outfile.write("</table>\n")
+        outfile.start_tag("div", "class='army_header'")
+        outfile.start_tag("table", "class='army_table'")
+        outfile.content("<tr><th colspan='2' class='title'>%s</th></tr>" % army_name)
+        outfile.content("<tr><th>Warlord</th><td>%s</td></tr>" % warlord)
+        outfile.content("<tr><th>Points limit</th><td>%s</td></tr>" % limit)
+        outfile.content("<tr><th>Points total</th><td>%s</td></tr>" % total)
+        outfile.content("<tr><th>Points to spare</th><td>%s</td></tr>" % (limit - total))
+        outfile.content("<tr><th>CP</td><td>%s</th></tr>" % cp_total)
+        outfile.end_tag() # table
         if not self.__is_kill_team:
-            outfile.write("<table>\n")
-            outfile.write("<tr>\n")
-            outfile.write("<th class='title'>Detachment</th>\n")
-            outfile.write("<th class='title'>Type</th>\n")
-            outfile.write("<th class='title'>CP</th>\n")
-            outfile.write("<th class='title'>Cost</th>\n")
-            outfile.write("</tr>\n")
+            outfile.start_tag("table")
+            outfile.start_tag("tr")
+            outfile.content("<th class='title'>Detachment</th>")
+            outfile.content("<th class='title'>Type</th>")
+            outfile.content("<th class='title'>CP</th>")
+            outfile.content("<th class='title'>Cost</th>")
+            outfile.end_tag() # tr
             for detachment in army["Detachments"]:
-                outfile.write("<tr>\n")
-                outfile.write("<td colspan='1'>%s</td>\n" % detachment["Name"])
-                outfile.write("<td colspan='1'>%s</td>\n" % detachment["Type"])
-                outfile.write("<td colspan='1'>%s</td>\n" % self.lookup_formation(detachment["Type"]).cp)
-                outfile.write("<td colspan='1'>%s</td>\n" % self.detachment_points_cost(detachment))
-                outfile.write("</tr>\n")
-            outfile.write("</table>\n")
-        outfile.write("</div>\n")
+                outfile.start_tag("tr")
+                outfile.content("<td colspan='1'>%s</td>" % detachment["Name"])
+                outfile.content("<td colspan='1'>%s</td>" % detachment["Type"])
+                outfile.content("<td colspan='1'>%s</td>" % self.lookup_formation(detachment["Type"]).cp)
+                outfile.content("<td colspan='1'>%s</td>" % self.detachment_points_cost(detachment))
+                outfile.end_tag() # tr
+            outfile.end_tag() # table
+        outfile.end_tag() # div
 
     def write_force_organisation_chart(self, outfile, detachment):
         """ Write the force organisation chart for the detachment. """
     
-        outfile.write("<div class='detachment_header'>\n")
-    
-        outfile.write("<table class='detachment_table'>\n")
-        outfile.write("<tr>\n")
-        outfile.write("<th colspan='6' class='title'>%s</th>\n" % detachment["Name"])
-        outfile.write("</tr>\n")
-        outfile.write("<tr>\n")
-        outfile.write("<th>Type</th>\n")
-        outfile.write("<td colspan='1'>%s</td>\n" % detachment["Type"])
-        outfile.write("<th>CP</th>\n")
-        outfile.write("<td colspan='1'>%s</td>\n" % self.lookup_formation(detachment["Type"]).cp)
-        outfile.write("<th>Cost</th>\n")
-        outfile.write("<td colspan='1'>%s</td>\n" % self.detachment_points_cost(detachment))
-        outfile.write("</tr>\n")
-        outfile.write("</table>\n")
+        outfile.start_tag("div", "class='detachment_header'")
+
+        outfile.comment(detachment["Name"])
+        outfile.start_tag("table", "class='detachment_table'")
+        outfile.start_tag("tr")
+        outfile.oneliner("th", extra="colspan='6' class='title'", content=detachment["Name"])
+        outfile.end_tag() # tr
+        outfile.start_tag("tr")
+        outfile.oneliner("th", content="Type")
+        outfile.oneliner("td", extra="colspan='1'", content = detachment["Type"])
+        outfile.oneliner("th", content="CP")
+        outfile.oneliner("td", extra="colspan='1'", content=self.lookup_formation(detachment["Type"]).cp)
+        outfile.oneliner("th", content="Cost")
+        outfile.oneliner("td", extra="colspan='1'", content = self.detachment_points_cost(detachment))
+        outfile.end_tag() # tr
+        outfile.end_tag() # table
     
         # Write the column header. Note that transports are handled as a special
         # case.
-        outfile.write("<table class='detachment_table'>\n")
-        outfile.write("<tr>\n")
+        outfile.comment("Formation")
+        outfile.start_tag("table", "class='detachment_table'")
+        outfile.start_tag("tr")
         formation = self.lookup_formation(detachment["Type"])
         for slot in formation.slots:
-            outfile.write("<th class='title'>%s</th>\n" % slot)
-        outfile.write("<th class='title'>Transports</th>\n")
-        outfile.write("</tr>\n")
+            outfile.oneliner("th", extra="class='title'", content=slot)
+        outfile.oneliner("th", extra="class='title'", content="Transports")
+        outfile.end_tag() # tr
     
         # Write the slot totals and limits.
-        outfile.write("<tr>\n")
+        outfile.start_tag("tr")
         for slot in formation.slots:
             min, max = formation.slots[slot]
             count = 0
             for squad in detachment["Units"]:
                 if squad["Slot"] == slot:
                     count += 1
-            outfile.write("<td>%s/%s</td>\n" % (count, max))
+            outfile.oneliner("td", content="%s/%s" % (count, max))
     
         # Again handle transports as a special case since their limit depends
         # on everything else.
@@ -693,26 +737,27 @@ class GameData(object):
                 transport_count += 1
             else:
                 transport_limit += 1
-        outfile.write("<td>%s/%s</td>\n" % (transport_count, transport_limit))
-        outfile.write("</tr>\n")
-        outfile.write("</table>\n")
+        outfile.oneliner("td>", content="%s/%s" % (transport_count, transport_limit))
+        outfile.end_tag() # tr
+        outfile.end_tag() # table
     
         # Write a summary of all units in detachment.
-        outfile.write("<table>\n")
-        outfile.write("<tr>\n")
-        outfile.write("<th class='title'>Unit</th>\n")
-        outfile.write("<th class='title'>Slot</th>\n")
-        outfile.write("<th class='title'>Cost</th>\n")
-        outfile.write("</tr>\n")
+        outfile.comment("Unit summary")
+        outfile.start_tag("table")
+        outfile.start_tag("tr")
+        outfile.oneliner("th", extra="class='title'", content="Unit")
+        outfile.oneliner("th", extra="class='title'", content="Slot")
+        outfile.oneliner("th", extra="class='title'", content="Cost")
+        outfile.end_tag() # tr
         for squad in detachment["Units"]:
-            outfile.write("<tr>\n")
-            outfile.write("<td>%s</td>\n" % squad["Name"])
-            outfile.write("<td>%s</td>\n" % squad["Slot"])
-            outfile.write("<td>%s</td>\n" % self.squad_points_cost(squad))
-            outfile.write("</tr>\n")
-        outfile.write("</table>\n")
+            outfile.start_tag("tr")
+            outfile.oneliner("td", content=squad["Name"])
+            outfile.oneliner("td", content=squad["Slot"])
+            outfile.oneliner("td", content=self.squad_points_cost(squad))
+            outfile.end_tag() # tr
+        outfile.end_tag() # table
     
-        outfile.write("</div>\n")
+        outfile.end_tag() # div
 
     def write_detachment(self, outfile, detachment):
         """ Write a detachment. """
@@ -722,10 +767,10 @@ class GameData(object):
             self.write_force_organisation_chart(outfile, detachment)
     
         # Write out each squad.
-        outfile.write("<div class='detachment'>\n")
+        outfile.start_tag("div", "class='detachment'")
         for squad in detachment["Units"]:
             self.write_squad(outfile, squad)
-        outfile.write("</div'>\n")
+        outfile.end_tag() # div
 
     def write_squad(self, outfile, squad):
         """ Write out the cost breakdown for a squad. """
@@ -746,43 +791,47 @@ class GameData(object):
         abilities = self.list_squad_abilities(squad)
     
         # Start the squad.
-        outfile.write("<div class='squad'>\n")
+        outfile.comment(squad["Name"])
+        outfile.start_tag("div", "class='squad'")
     
         # Squad name and total cost.
-        outfile.write("<table class='unit_table'>\n")
-        outfile.write("<tr>\n")
+        outfile.comment("Summary")
+        outfile.start_tag("table", "class='unit_table'")
+        outfile.start_tag("tr")
         name = squad["Name"]
         if self.__is_kill_team:
             name += " (%s)" % self.squad_points_cost(squad)
-        outfile.write("<th colspan='6' class='title'>%s</th>\n" % name)
-        outfile.write("</tr>\n")
+        outfile.oneliner("th", extra="colspan='6' class='title'", content=name)
+        outfile.end_tag() # tr
         if not self.__is_kill_team:
-            outfile.write("<tr>\n")
-            outfile.write("<th>Slot</th>\n")
-            outfile.write("<td>%s</td>\n" % squad["Slot"])
-            outfile.write("<th>Models</th>\n")
-            outfile.write("<td>%s</td>\n" % num_models)
-            outfile.write("<th>Cost</th>\n")
-            outfile.write("<td>%s</td>\n" % self.squad_points_cost(squad))
-            outfile.write("</tr>\n")
-        outfile.write("</table>\n")
+            outfile.start_tag("tr")
+            outfile.oneliner("th", content="Slot")
+            outfile.oneliner("td", content=squad["Slot"])
+            outfile.oneliner("th", content="Models")
+            outfile.oneliner("td", content=num_models)
+            outfile.oneliner("th", content="Cost")
+            outfile.oneliner("td", content=self.squad_points_cost(squad))
+            outfile.end_tag() # tr
+        outfile.end_tag() # table
 
         # Add notes.
         notes = squad.get("Notes")
         if notes is not None:
-            outfile.write("<p class='notes'>%s</p>\n" % notes)
+            outfile.start_tag("p", "class='notes'")
+            outfile.content(notes)
+            outfile.end_tag()
 
         # Save space by writing costs as a list.
         if self.__is_kill_team:
             assert len(models) == 1
-            outfile.write("<p class='inline_costs'>\n")
+            outfile.start_tag("p", "class='inline_costs'")
             model = self.lookup_item(models[0])
             text = "%s (%spts) with " % (model.name, model.cost)
             items = [self.lookup_item(item_name) for item_name in (weapons + wargear)]
             items_strs = ["%s (%spts)" % (item.name, item.cost) for item in items]
             text += ", ".join(items_strs)
-            outfile.write(text + "\n")
-            outfile.write("</p>\n")
+            outfile.content(text)
+            outfile.end_tag() # p
             
         # Write quick reference tables for the squad.
         self.write_models_table(outfile, models, squad)
@@ -796,36 +845,38 @@ class GameData(object):
             self.write_psyker_table(outfile, model, squad)
     
         # Done with the squad.
-        outfile.write("</div>\n")
+        outfile.end_tag() # div
 
     def write_army(self, outfile, army):
         """ Write the HTML for an army to a stream. """
     
         # Start of HTML file.
-        outfile.write("<html>\n")
-        outfile.write("<head>\n")
-        outfile.write("<link rel='stylesheet' type='text/css' href='../style.css'/>\n")
-        outfile.write("</head>\n")
-        outfile.write("<body>\n")
+        outfile.start_tag("html")
+        outfile.start_tag("head")
+        outfile.content("<link rel='stylesheet' type='text/css' href='../style.css'/>")
+        outfile.end_tag() # head
+        outfile.start_tag("body")
     
         # Output totals and army info.
         self.write_army_header(outfile, army)
     
         # Output breakdown for each detachment.
-        outfile.write("<div class='army'>\n")
+        outfile.comment("Army list")
+        outfile.start_tag("div", "class='army'")
         for detachment in army["Detachments"]:
             self.write_detachment(outfile, detachment)
-        outfile.write("</div>\n")
+        outfile.end_tag() # div
     
         # Write out stat tables for all weapons and models in army.
+        outfile.comment("Appendices")
         self.write_models_table(outfile, self.list_army_models(army))
         self.write_wargear_table(outfile, self.list_army_wargear(army))
         self.write_weapons_table(outfile, self.list_army_weapons(army))
         self.write_abilities_table(outfile, self.list_army_abilities(army))
     
         # End of HTML file.
-        outfile.write("</body>\n")
-        outfile.write("</html>\n")
+        outfile.end_tag() # body
+        outfile.end_tag() # html
 
     def write_army_file(self, out_dir, army):
         """ Process a single army. """
@@ -838,7 +889,8 @@ class GameData(object):
         assert not os.path.isfile(filename)
     
         # Write the army.
-        with open(filename, "w") as outfile:
+        with open(filename, "w") as f:
+            outfile = Outfile(f)
             self.write_army(outfile, army)
     
         # Output the name of the file we wrote.
@@ -862,19 +914,20 @@ def main():
     shutil.copy("../style/style.css", "style.css")
 
     # Write out each army and list it in the index file.
-    with open("index.html", "w") as outfile:
-        outfile.write("<html>\n")
-        outfile.write("<head>\n")
-        outfile.write("<link rel='stylesheet' type='text/css' href='style.css'/>")
-        outfile.write("</head>\n")
-        outfile.write("<body>\n")
-        outfile.write("<h1> Army Lists </h1>\n")
+    with open("index.html", "w") as f:
+        outfile = Outfile(f)
+        outfile.start_tag("html")
+        outfile.start_tag("head")
+        outfile.content("<link rel='stylesheet' type='text/css' href='style.css'/>")
+        outfile.end_tag()
+        outfile.start_tag("body")
+        outfile.content("<h1> Army Lists </h1>")
         for army in armies:
             game = kill_team if army["Game"] == "Kill Team" else forty_k
             filename = game.write_army_file("lists", army)
             game.write_army_header(outfile, army, filename)
-        outfile.write("</body>\n")
-        outfile.write("</html>\n")
+        outfile.end_tag() # body
+        outfile.end_tag() # html
 
 if __name__ == '__main__':
     main()
