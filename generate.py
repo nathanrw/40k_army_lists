@@ -737,7 +737,7 @@ class GameData(object):
                 transport_count += 1
             else:
                 transport_limit += 1
-        outfile.oneliner("td>", content="%s/%s" % (transport_count, transport_limit))
+        outfile.oneliner("td", content="%s/%s" % (transport_count, transport_limit))
         outfile.end_tag() # tr
         outfile.end_tag() # table
     
