@@ -299,7 +299,7 @@ class Outfile(object):
         tag = self.stack.pop(len(self.stack)-1)
         self.write(self.pad())
         self.write("</%s>\n" % tag)
-        
+
     def oneliner(self, tag, **kwargs):
         extra = kwargs.get("extra", "")
         content = kwargs.get("content", "")
@@ -853,7 +853,7 @@ class GameData(object):
         # Start of HTML file.
         outfile.start_tag("html")
         outfile.start_tag("head")
-        outfile.content("<link rel='stylesheet' type='text/css' href='../style.css'/>")
+        outfile.content("<link rel='stylesheet' type='text/css' href='../../style/style.css'/>")
         outfile.end_tag() # head
         outfile.start_tag("body")
     
@@ -911,14 +911,13 @@ def main():
     os.mkdir("docs")
     os.chdir("docs")
     os.mkdir("lists")
-    shutil.copy("../style/style.css", "style.css")
 
     # Write out each army and list it in the index file.
     with open("index.html", "w") as f:
         outfile = Outfile(f)
         outfile.start_tag("html")
         outfile.start_tag("head")
-        outfile.content("<link rel='stylesheet' type='text/css' href='style.css'/>")
+        outfile.content("<link rel='stylesheet' type='text/css' href='../style/style.css'/>")
         outfile.end_tag()
         outfile.start_tag("body")
         outfile.content("<h1> Army Lists </h1>")
