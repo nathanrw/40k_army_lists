@@ -857,7 +857,7 @@ class GameData(object):
         # Start of HTML file.
         outfile.start_tag("html")
         outfile.start_tag("head")
-        outfile.content("<link rel='stylesheet' type='text/css' href='../../style/style.css'/>")
+        outfile.content("<link rel='stylesheet' type='text/css' href='../style/style.css'/>")
         outfile.end_tag() # head
         outfile.start_tag("body")
     
@@ -910,18 +910,27 @@ def main():
     # The army lists.
     armies = read_armies("lists")
 
-    # Create the necessary directory structure.
-    shutil.rmtree("docs", True)
-    os.mkdir("docs")
-    os.chdir("docs")
-    os.mkdir("lists")
+    # Make sure we're in the right place.
+    directory = os.path.dirname(__file__)
+    if len(directory) > 0:
+        os.chdir(directory)
+
+    # Create / clean the directory structure.
+    if not os.path.exists("docs"):
+        os.mkdir("docs")
+    if os.path.exists("docs/lists"):
+        shutil.rmtree("docs/lists")
+    if os.path.exists("docs/index.html"):
+        os.remove("docs/index.html")
 
     # Write out each army and list it in the index file.
+    os.chdir("docs")
+    os.mkdir("lists")
     with open("index.html", "w") as f:
         outfile = Outfile(f)
         outfile.start_tag("html")
         outfile.start_tag("head")
-        outfile.content("<link rel='stylesheet' type='text/css' href='../style/style.css'/>")
+        outfile.content("<link rel='stylesheet' type='text/css' href='./style/style.css'/>")
         outfile.end_tag()
         outfile.start_tag("body")
         outfile.content("<h1> Army Lists </h1>")
