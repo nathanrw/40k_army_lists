@@ -55,25 +55,28 @@ td, th {
     position: relative;
 }
 
-.squad {
-    margin-top: 50px;
+.cards {
+    column-width: 100mm;
+}
+
+.cards .squad {
+    width: 100mm;
+    font-size: 11px;
+}
+.cards table {
+    font-size: 11px;
+}
+
+.squad_portrait_cell {
+    width: 64px;
+    padding: 0px;
+    vertical-align: top;
 }
 
 .squad_portrait {
-    display: block;
+    width: 64px;
+    height: 64px;
     border: 2px solid #000000;
-    background-color: #ffffff;
-    width:115px;
-    height:110px;
-    right:10px;
-    top:-30px;
-    position: absolute;
-    background-image: url("../images/default.png");
-}
-
-.unit_table {
-    width: 80%;
-    margin-left: 20px;
 }
 
 /* The name of an ability should stand out. */
@@ -83,10 +86,6 @@ td, th {
 
 /* The notes on a squad. */
 .notes {
-    padding: 16px;
-    width: 70%;
-    margin: auto;
-    margin-left: 20px;
     text-align:center;
     font-style: italic;
 }
@@ -94,6 +93,6 @@ td, th {
 /* The inline costs on a squad. */
 .inline_costs {
     padding: 4px;
-    width: 95%;
-    margin: auto;
+    width: 80%;
+    margin-left: 20px;
 }

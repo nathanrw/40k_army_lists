@@ -213,6 +213,7 @@ def read_armies(dirname):
     """ Read the army data into dicts. """
     armies = []
     for filename in os.listdir(dirname):
+        if not filename.lower().endswith(".yaml"): continue
         with open(os.path.join("lists", filename), "r") as infile:
             armies.append(yaml.load(infile))
     return armies
@@ -471,12 +472,11 @@ class GameData(object):
         seen = set()
         for detachment in army["Detachments"]:
             for unit in detachment["Units"]:
-                for name in unit["Items"]:
-                    item = self.__costs[name]
-                    for ability in item.abilities:
-                        if not ability in seen:
-                            seen.add(ability)
-                            abilities.append(ability)
+                squad_abilities = self.list_squad_abilities(unit)
+                for ability in squad_abilities:
+                    if not ability in seen:
+                        seen.add(ability)
+                        abilities.append(ability)
         return abilities
 
     def list_squad_abilities(self, squad):
@@ -649,12 +649,29 @@ class GameData(object):
         outfile.comment("Psyker")
         table.write(outfile)
 
-    def write_army_header(self, outfile, army, link=None):
+    def write_kill_team_list(self, outfile, army):
+        """ Write the kill team army summary. """
+        if not self.__is_kill_team: return
+        outfile.start_tag("table")
+        outfile.content("<tr><th class='title' colspan=2>Army List</th></tr>")
+        for detachment in army["Detachments"]:
+            for squad in detachment["Units"]:
+                weapons, models, wargear, num_models = self.get_squad_items(squad)
+                assert len(models) == 1
+                model = self.lookup_item(models[0])
+                text = "%s (%spts) with " % (model.name, model.cost)
+                items = [self.lookup_item(item_name) for item_name in (weapons + wargear)]
+                items_strs = ["%s (%spts)" % (item.name, item.cost) for item in items]
+                text += ", ".join(items_strs)
+                outfile.content("<tr><td class='stat-left'><span class='ability_tag'>%s: </span> %s</td></tr>" % (squad["Name"], text))
+        outfile.end_tag()
+
+    def write_army_header(self, outfile, army, files=None):
         """ Write the army header. """
         army_name = army["Name"]
         outfile.comment(army_name)
-        if link is not None:
-            army_name = "<a href='%s'>%s</a>" % (link, army_name)
+        if files is not None:
+            army_name = "<a href='%s'>%s</a>" % (files["full"]["filename"], army_name)
         limit = army["Points"]
         total = self.army_points_cost(army)
         cp_total = self.army_cp_total(army)
@@ -768,14 +785,16 @@ class GameData(object):
     
         # Write out each squad.
         outfile.start_tag("div", "class='detachment'")
+        if self.__is_kill_team:
+            outfile.start_tag("div", "class='cards'")
         for squad in detachment["Units"]:
             self.write_squad(outfile, squad)
+        if self.__is_kill_team:
+            outfile.end_tag()
         outfile.end_tag() # div
 
-    def write_squad(self, outfile, squad):
-        """ Write out the cost breakdown for a squad. """
-    
-        # Determine weapons and models used in the squad.
+    def get_squad_items(self, squad):
+        """ Determine weapons and models used in the squad. """
         weapons = []
         models = []
         wargear = []
@@ -788,15 +807,17 @@ class GameData(object):
                 num_models += squad["Items"][item]
             elif item in self.__wargear and not item in wargear:
                 wargear.append(item)
+        return (weapons, models, wargear, num_models)
+
+    def write_squad(self, outfile, squad):
+        """ Write out the cost breakdown for a squad. """
+
+        weapons, models, wargear, num_models = self.get_squad_items(squad)
         abilities = self.list_squad_abilities(squad)
     
         # Start the squad.
         outfile.comment(squad["Name"])
         outfile.start_tag("div", "class='squad'")
-
-        # Portrait
-        outfile.start_tag("div", "class='squad_portrait'")
-        outfile.end_tag()
     
         # Squad name and total cost.
         outfile.comment("Summary")
@@ -806,6 +827,11 @@ class GameData(object):
         if self.__is_kill_team:
             name += " (%s)" % self.squad_points_cost(squad)
         outfile.oneliner("th", extra="colspan='6' class='title'", content=name)
+        outfile.start_tag("td", "class='squad_portrait_cell' rowspan=3")
+        portrait = squad.get("Portrait", "../images/default.png")
+        outfile.oneliner("img",
+                         extra = "class='squad_portrait' src='%s'" % portrait)
+        outfile.end_tag()
         outfile.end_tag() # tr
         if not self.__is_kill_team:
             outfile.start_tag("tr")
@@ -816,26 +842,10 @@ class GameData(object):
             outfile.oneliner("th", content="Cost")
             outfile.oneliner("td", content=self.squad_points_cost(squad))
             outfile.end_tag() # tr
-        outfile.end_tag() # table
-
-        # Add notes.
         notes = squad.get("Notes")
         if notes is not None:
-            outfile.start_tag("p", "class='notes'")
-            outfile.content(notes)
-            outfile.end_tag()
-
-        # Save space by writing costs as a list.
-        if self.__is_kill_team:
-            assert len(models) == 1
-            outfile.start_tag("p", "class='inline_costs'")
-            model = self.lookup_item(models[0])
-            text = "%s (%spts) with " % (model.name, model.cost)
-            items = [self.lookup_item(item_name) for item_name in (weapons + wargear)]
-            items_strs = ["%s (%spts)" % (item.name, item.cost) for item in items]
-            text += ", ".join(items_strs)
-            outfile.content(text)
-            outfile.end_tag() # p
+            outfile.content("<tr><td class='notes'>%s</td></tr>" % notes)
+        outfile.end_tag() # table
             
         # Write quick reference tables for the squad.
         self.write_models_table(outfile, models, squad)
@@ -851,7 +861,7 @@ class GameData(object):
         # Done with the squad.
         outfile.end_tag() # div
 
-    def write_army(self, outfile, army):
+    def write_army(self, outfile, army, sections=[]):
         """ Write the HTML for an army to a stream. """
     
         # Start of HTML file.
@@ -862,21 +872,26 @@ class GameData(object):
         outfile.start_tag("body")
     
         # Output totals and army info.
-        self.write_army_header(outfile, army)
+        if len(sections) == 0 or "header" in sections:
+            self.write_army_header(outfile, army)
     
         # Output breakdown for each detachment.
-        outfile.comment("Army list")
-        outfile.start_tag("div", "class='army'")
-        for detachment in army["Detachments"]:
-            self.write_detachment(outfile, detachment)
-        outfile.end_tag() # div
+        if len(sections) == 0 or "units" in sections:
+            outfile.comment("Army list")
+            outfile.start_tag("div", "class='army'")
+            for detachment in army["Detachments"]:
+                self.write_detachment(outfile, detachment)
+            outfile.end_tag() # div
     
         # Write out stat tables for all weapons and models in army.
-        outfile.comment("Appendices")
-        self.write_models_table(outfile, self.list_army_models(army))
-        self.write_wargear_table(outfile, self.list_army_wargear(army))
-        self.write_weapons_table(outfile, self.list_army_weapons(army))
-        self.write_abilities_table(outfile, self.list_army_abilities(army))
+        if len(sections) == 0 or "appendices" in sections:
+            outfile.comment("Appendices")
+            if self.__is_kill_team:
+                self.write_kill_team_list(outfile, army)
+            self.write_models_table(outfile, self.list_army_models(army))
+            self.write_wargear_table(outfile, self.list_army_wargear(army))
+            self.write_weapons_table(outfile, self.list_army_weapons(army))
+            self.write_abilities_table(outfile, self.list_army_abilities(army))
     
         # End of HTML file.
         outfile.end_tag() # body
@@ -884,21 +899,33 @@ class GameData(object):
 
     def write_army_file(self, out_dir, army):
         """ Process a single army. """
-    
-        # Filename based on army name.
-        basename = army["Name"] + ".html"
-        filename = os.path.join(out_dir, basename)
-    
-        # File should not already exist (army name should be unique.)
-        assert not os.path.isfile(filename)
+
+        files = {
+            "full": {
+                "filename": os.path.join(out_dir, army["Name"] + ".html"),
+                "sections": []
+            },
+            "cards": {
+                "filename": os.path.join(out_dir, army["Name"] + "_cards.html"),
+                "sections": ["units"]
+            },
+            "appendices": {
+                "filename": os.path.join(out_dir, army["Name"] + "_appendices.html"),
+                "sections": ["header", "appendices"]
+            }
+        }
     
         # Write the army.
-        with open(filename, "w") as f:
-            outfile = Outfile(f)
-            self.write_army(outfile, army)
+        for name in files:
+            filename = files[name]["filename"]
+            sections = files[name]["sections"]
+            assert not os.path.exists(filename)
+            with open(filename, "w") as f:
+                outfile = Outfile(f)
+                self.write_army(outfile, army, sections)
     
         # Output the name of the file we wrote.
-        return filename
+        return files
 
 
 def main():
@@ -926,6 +953,7 @@ def main():
     # Write out each army and list it in the index file.
     os.chdir("docs")
     os.mkdir("lists")
+    shutil.copytree("../lists/images", "lists/images")
     with open("index.html", "w") as f:
         outfile = Outfile(f)
         outfile.start_tag("html")
@@ -936,8 +964,8 @@ def main():
         outfile.content("<h1> Army Lists </h1>")
         for army in armies:
             game = kill_team if army["Game"] == "Kill Team" else forty_k
-            filename = game.write_army_file("lists", army)
-            game.write_army_header(outfile, army, filename)
+            files = game.write_army_file("lists", army)
+            game.write_army_header(outfile, army, files)
         outfile.end_tag() # body
         outfile.end_tag() # html
 
