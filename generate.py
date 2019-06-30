@@ -793,6 +793,10 @@ class GameData(object):
         # Start the squad.
         outfile.comment(squad["Name"])
         outfile.start_tag("div", "class='squad'")
+
+        # Portrait
+        outfile.start_tag("div", "class='squad_portrait'")
+        outfile.end_tag()
     
         # Squad name and total cost.
         outfile.comment("Summary")
