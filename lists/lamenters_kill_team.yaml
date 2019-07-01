@@ -5,6 +5,8 @@ Points: 100
 Detachments:
   - Name: Kill Team
     Type: Kill Team
+    Background: Last Survivors
+    Quirk: Bloodthirsty
     Units:
 
       - Name: Brother Sergeant Raffaelo
@@ -12,7 +14,10 @@ Detachments:
         Portrait: ./images/raffaelo.png
         Slot: Troops
         Specialist: Leader
-        Level: 1
+        Demeanour: Dour
+        Convalescence: False
+        New Recruit: False
+        Experience: 3
         Items:
           Intercessor Sergeant: 1
           Chainsword: 1
@@ -26,7 +31,10 @@ Detachments:
         Portrait: ./images/donatello.png
         Slot: Troops
         Specialist: Sniper
-        Level: 1
+        Demeanour: Dour
+        Convalescence: False
+        New Recruit: False
+        Experience: 3
         Items:
           Intercessor Gunner: 1
           Bolt Pistol: 1
@@ -39,6 +47,10 @@ Detachments:
         Notes: The reclusiam of the fortress monastery has a painted ceiling unmatched in all of the imperium; this is Brother Michelangelo's finest work, and the source of his fame.
         Portrait: ./images/michelangelo.png
         Slot: Troops
+        Demeanour: Dour
+        Convalescence: False
+        New Recruit: False
+        Experience: 3
         Items:
           Intercessor: 1
           Bolt Pistol: 1
@@ -51,7 +63,10 @@ Detachments:
         Portrait: ./images/byron.png
         Slot: Troops
         Specialist: Comms
-        Level: 1
+        Demeanour: Dour
+        Convalescence: False
+        New Recruit: False
+        Experience: 3
         Items:
           Intercessor: 1
           Bolt Pistol: 1
@@ -63,6 +78,10 @@ Detachments:
         Notes: IT'S ALIIIIIVE
         Portrait: ./images/shelley.png
         Slot: Troops
+        Demeanour: Dour
+        Convalescence: False
+        New Recruit: False
+        Experience: 3
         Items:
           Reiver: 1
           Combat Knife: 1
@@ -78,7 +97,10 @@ Detachments:
         Portrait: ./images/caravaggio.png
         Slot: Troops
         Specialist: Combat
-        Level: 1
+        Demeanour: Dour
+        Convalescence: False
+        New Recruit: False
+        Experience: 3
         Items:
           Reiver: 1
           Combat Knife: 1

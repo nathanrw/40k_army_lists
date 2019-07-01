@@ -209,6 +209,42 @@ def read_formations(filename):
     return formations
 
 
+def read_backgrounds(filename):
+    backgrounds = collections.OrderedDict()
+    class Background(object):
+        def __init__(self, row):
+            self.name = row["Name"]
+    with open(filename) as csvfile:
+        reader = csv.DictReader(csvfile)
+        for row in reader:
+            backgrounds[row["Name"]] = Background(row)
+    return backgrounds
+
+
+def read_quirks(filename):
+    quirks = collections.OrderedDict()
+    class Quirk(object):
+        def __init__(self, row):
+            self.name = row["Name"]
+    with open(filename) as csvfile:
+        reader = csv.DictReader(csvfile)
+        for row in reader:
+            quirks[row["Name"]] = Quirk(row)
+    return quirks
+
+
+def read_demeanours(filename):
+    demeanours = collections.OrderedDict()
+    class Demeanour(object):
+        def __init__(self, row):
+            self.name = row["Name"]
+    with open(filename) as csvfile:
+        reader = csv.DictReader(csvfile)
+        for row in reader:
+            demeanours[row["Name"]] = Demeanour(row)
+    return demeanours
+
+
 def read_armies(dirname):
     """ Read the army data into dicts. """
     armies = []
@@ -317,6 +353,7 @@ class Outfile(object):
 class GameData(object):
     def __init__(self, game):
         self.__game = game
+        self.__is_kill_team = self.__game == "Kill Team"
         data_dir = os.path.join("data", game.lower().replace(" ", "-"))
         self.__weapons = read_weapons(os.path.join(data_dir, "weapons.csv")) 
         self.__wargear = read_wargear(os.path.join(data_dir, "wargear.csv"))
@@ -324,11 +361,17 @@ class GameData(object):
         self.__formations = read_formations(os.path.join(data_dir, "formations.csv"))
         self.__abilities = read_abilities(os.path.join(data_dir, "abilities.csv"))
         self.__psykers = read_psykers(os.path.join(data_dir, "psykers.csv"))
+        self.__demeanours = {}
+        self.__backgrounds = {}
+        self.__quirks = {}
+        if self.__is_kill_team:
+            self.__demeanours = read_demeanours(os.path.join(data_dir, "demeanours.csv"))
+            self.__quirks = read_quirks(os.path.join(data_dir, "quirks.csv"))
+            self.__backgrounds = read_backgrounds(os.path.join(data_dir, "backgrounds.csv"))
         self.__costs = {}
         self.__costs.update(self.__weapons)
         self.__costs.update(self.__models)
         self.__costs.update(self.__wargear)
-        self.__is_kill_team = self.__game == "Kill Team"
 
     def lookup_item(self, item):
         """ Lookup an item in the costs table. """
@@ -358,6 +401,27 @@ class GameData(object):
             return self.__psykers[model_name]
         except KeyError:
             print ("Model '%s' is not a psyker." % model_name)
+
+    def lookup_quirk(self, name):
+        """ Lookup a quirk. """
+        try:
+            return self.__quirks[name]
+        except KeyError:
+            print ("Unknown quirk '%s'" % name)
+
+    def lookup_background(self, name):
+        """ Lookup a background. """
+        try:
+            return self.__backgrounds[name]
+        except KeyError:
+            print ("Unknown background '%s'" % name)
+
+    def lookup_demeanour(self, name):
+        """ Lookup a demeanour. """
+        try:
+            return self.__demeanours[name]
+        except KeyError:
+            print ("Unknown demeanour '%s'" % name)
 
     def lookup_buff(self, squad, stat_name, item):
         """ Lookup a buff for a stat. """
@@ -481,6 +545,13 @@ class GameData(object):
                         abilities.append(ability)
         return abilities
 
+    def get_squad_level(self, squad):
+        xp = squad.get("Experience", 0)
+        if xp >= 12: return 3
+        if xp >= 7: return 2
+        if xp >= 3: return 1
+        return 0
+
     def list_squad_abilities(self, squad):
         """ List each ability in a squad. """
         abilities = []
@@ -490,7 +561,7 @@ class GameData(object):
                     abilities.append(ability)
         if "Specialist" in squad and self.__is_kill_team:
             specialist = squad["Specialist"]
-            level = squad.get("Level", 1)
+            level = self.get_squad_level(squad)
             for i in range(1, level+1):
                 abilities.append("%s (%s)" % (specialist, i))
         return abilities
@@ -705,6 +776,18 @@ class GameData(object):
                 outfile.content("<td colspan='1'>%s</td>" % self.lookup_formation(detachment["Type"]).cp)
                 outfile.content("<td colspan='1'>%s</td>" % self.detachment_points_cost(detachment))
                 outfile.end_tag() # tr
+            outfile.end_tag() # table
+        else:
+            kt = army["Detachments"][0] if len(army["Detachments"]) > 0 else {}
+            outfile.start_tag("table")
+            outfile.start_tag("tr")
+            outfile.content("<th class='title'>Background</th>")
+            outfile.content("<th class='title'>Quirk</th>")
+            outfile.end_tag() # tr
+            outfile.start_tag("tr")
+            outfile.content("<td colspan='1'>%s</td>" % kt.get("Background", "None"))
+            outfile.content("<td colspan='1'>%s</td>" % kt.get("Quirk", "None"))
+            outfile.end_tag() # tr
             outfile.end_tag() # table
         outfile.end_tag() # div
 
