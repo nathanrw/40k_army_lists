@@ -214,8 +214,10 @@ def read_armies(dirname):
     armies = []
     for filename in os.listdir(dirname):
         if not filename.lower().endswith(".yaml"): continue
-        with open(os.path.join("lists", filename), "r") as infile:
-            armies.append(yaml.load(infile))
+        with open(os.path.join(dirname, filename), "r") as infile:
+            army = yaml.load(infile)
+            army["Basename"] = os.path.splitext(filename)[0]
+            armies.append(army)
     return armies
 
 
@@ -666,12 +668,15 @@ class GameData(object):
                 outfile.content("<tr><td class='stat-left'><span class='ability_tag'>%s: </span> %s</td></tr>" % (squad["Name"], text))
         outfile.end_tag()
 
-    def write_army_header(self, outfile, army, files=None):
+    def write_army_header(self, outfile, army, variants=None):
         """ Write the army header. """
         army_name = army["Name"]
         outfile.comment(army_name)
-        if files is not None:
-            army_name = "<a href='%s'>%s</a>" % (files["full"]["filename"], army_name)
+        if variants is not None:
+            army_name += " ("
+            for variant in variants:
+                army_name += " <a href='%s'>%s</a>" % (variant["filename"], variant["name"])
+            army_name += ")"
         limit = army["Points"]
         total = self.army_points_cost(army)
         cp_total = self.army_cp_total(army)
@@ -900,32 +905,35 @@ class GameData(object):
     def write_army_file(self, out_dir, army):
         """ Process a single army. """
 
-        files = {
-            "full": {
-                "filename": os.path.join(out_dir, army["Name"] + ".html"),
+        variants = [
+            {
+                "name": "full",
+                "filename": os.path.join(out_dir, army["Basename"] + ".html"),
                 "sections": []
             },
-            "cards": {
-                "filename": os.path.join(out_dir, army["Name"] + "_cards.html"),
+            {
+                "name": "cards",
+                "filename": os.path.join(out_dir, army["Basename"] + "_cards.html"),
                 "sections": ["units"]
             },
-            "appendices": {
-                "filename": os.path.join(out_dir, army["Name"] + "_appendices.html"),
+            {
+                "name": "appendices",
+                "filename": os.path.join(out_dir, army["Basename"] + "_appendices.html"),
                 "sections": ["header", "appendices"]
             }
-        }
+        ]
     
         # Write the army.
-        for name in files:
-            filename = files[name]["filename"]
-            sections = files[name]["sections"]
+        for variant in variants:
+            filename = variant["filename"]
+            sections = variant["sections"]
             assert not os.path.exists(filename)
             with open(filename, "w") as f:
                 outfile = Outfile(f)
                 self.write_army(outfile, army, sections)
     
         # Output the name of the file we wrote.
-        return files
+        return variants
 
 
 def main():
@@ -964,8 +972,8 @@ def main():
         outfile.content("<h1> Army Lists </h1>")
         for army in armies:
             game = kill_team if army["Game"] == "Kill Team" else forty_k
-            files = game.write_army_file("lists", army)
-            game.write_army_header(outfile, army, files)
+            variants = game.write_army_file("lists", army)
+            game.write_army_header(outfile, army, variants)
         outfile.end_tag() # body
         outfile.end_tag() # html
 
