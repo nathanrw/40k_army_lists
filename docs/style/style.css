@@ -31,11 +31,13 @@ td, th {
 .stat-right {
     text-align: right;
 }
-.title {
-    background-color: #000000;
-    color: #ffffff;
+.title, .title_nofill {
     padding: 10px;
     font-variant: small-caps;
+}
+.title {
+    color: #ffffff;
+    background-color: #000000;
 }
 .title a {
     color: #ffffff;
@@ -79,6 +81,34 @@ td, th {
     border: 2px solid #000000;
 }
 
+.experience_gauge {
+    margin-left: 10px;
+    margin-right: 10px;
+    text-align: right;
+}
+
+.experience_cell, .experience_cell_checked, .experience_cell_level, .experience_cell_level_checked {
+    border: 1px solid #000000;
+    width: 16px;
+    height: 16px;
+    display: inline-block;
+}
+
+.experience_cell_level, .experience_cell_level_checked {
+    border-color: #ee3300;
+}
+
+.experience_cell_checked {
+      background: linear-gradient(to bottom right, transparent 45%, #000 45%, #000 55%, transparent 55%),
+                  linear-gradient(to bottom left, transparent 45%, #000 45%, #000 55%, transparent 55%);
+}
+
+.experience_cell_level_checked {
+      background: linear-gradient(to bottom right, transparent 45%, #ee3300 45%, #ee3300 55%, transparent 55%),
+                  linear-gradient(to bottom left, transparent 45%, #ee3300 45%, #ee3300 55%, transparent 55%);
+}
+
+
 /* The name of an ability should stand out. */
 .ability_tag {
     font-weight: bold;
@@ -95,4 +125,8 @@ td, th {
     padding: 4px;
     width: 80%;
     margin-left: 20px;
+}
+
+.extra_space {
+    height: 20mm;
 }

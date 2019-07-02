@@ -915,7 +915,7 @@ class GameData(object):
         if self.__is_kill_team:
             name += " (%s)" % self.squad_points_cost(squad)
         outfile.oneliner("th", extra="colspan='6' class='title'", content=name)
-        outfile.start_tag("td", "class='squad_portrait_cell' rowspan=3")
+        outfile.start_tag("td", "class='squad_portrait_cell' rowspan=2")
         portrait = squad.get("Portrait", "../images/default.png")
         outfile.oneliner("img",
                          extra = "class='squad_portrait' src='%s'" % portrait)
@@ -930,10 +930,37 @@ class GameData(object):
             outfile.oneliner("th", content="Cost")
             outfile.oneliner("td", content=self.squad_points_cost(squad))
             outfile.end_tag() # tr
-        notes = squad.get("Notes")
-        if notes is not None:
+        notes = squad.get("Notes", "")
+        demeanour = squad.get("Demeanour")
+        if demeanour is not None:
+            if len(notes) > 0:
+                notes += " "
+            notes += "(%s)" % demeanour
+        if len(notes) > 0:
             outfile.content("<tr><td class='notes'>%s</td></tr>" % notes)
         outfile.end_tag() # table
+
+        # Write the experience gauge
+        if self.__is_kill_team:
+            xp = squad.get("Experience", 0)
+            outfile.start_tag("table")
+            outfile.start_tag("tr")
+            outfile.start_tag("th class='title_nofill'")
+            outfile.content("XP")
+            outfile.end_tag() # th
+            outfile.start_tag("td")
+            outfile.start_tag("div", "class='experience_gauge'")
+            for i in xrange(12):
+                cell_class = "experience_cell"
+                if i == 3 or i == 7 or i == 12:
+                    cell_class += "_level"
+                if xp >= i:
+                    cell_class += "_checked"
+                outfile.oneliner("div", extra="class='%s'" % cell_class)
+            outfile.end_tag() # div
+            outfile.end_tag() # td
+            outfile.end_tag() # tr
+            outfile.end_tag() # table
             
         # Write quick reference tables for the squad.
         self.write_models_table(outfile, models, squad)
@@ -945,6 +972,11 @@ class GameData(object):
         # If the squad contains psykers, write out their info.
         for model in models:
             self.write_psyker_table(outfile, model, squad)
+
+        # Add some space for mid-campaign additions to avoid the need for
+        # re-printing.
+        if self.__is_kill_team:
+            outfile.oneliner("div", extra="class='extra_space'")
     
         # Done with the squad.
         outfile.end_tag() # div

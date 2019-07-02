@@ -31,7 +31,7 @@ Detachments:
         Portrait: ./images/donatello.png
         Slot: Troops
         Specialist: Sniper
-        Demeanour: Dour
+        Demeanour: Mysterious
         Convalescence: False
         New Recruit: False
         Experience: 3
@@ -47,7 +47,7 @@ Detachments:
         Notes: The reclusiam of the fortress monastery has a painted ceiling unmatched in all of the imperium; this is Brother Michelangelo's finest work, and the source of his fame.
         Portrait: ./images/michelangelo.png
         Slot: Troops
-        Demeanour: Dour
+        Demeanour: Noble
         Convalescence: False
         New Recruit: False
         Experience: 3
@@ -63,7 +63,7 @@ Detachments:
         Portrait: ./images/byron.png
         Slot: Troops
         Specialist: Comms
-        Demeanour: Dour
+        Demeanour: Sombre
         Convalescence: False
         New Recruit: False
         Experience: 3
@@ -78,7 +78,7 @@ Detachments:
         Notes: IT'S ALIIIIIVE
         Portrait: ./images/shelley.png
         Slot: Troops
-        Demeanour: Dour
+        Demeanour: Aggressive
         Convalescence: False
         New Recruit: False
         Experience: 3
@@ -97,7 +97,7 @@ Detachments:
         Portrait: ./images/caravaggio.png
         Slot: Troops
         Specialist: Combat
-        Demeanour: Dour
+        Demeanour: Ferocious
         Convalescence: False
         New Recruit: False
         Experience: 3
