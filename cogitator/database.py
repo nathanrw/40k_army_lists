@@ -2,6 +2,8 @@
 Functions for reading data from tables.
 """
 
+from __future__ import print_function
+
 import csv
 import collections
 import os
@@ -10,224 +12,253 @@ import sys
 import yaml
 
 
-def read_abilities(filename):
-    """ Read all of the abilities into a table. """
-    abilities = collections.OrderedDict()
-    class Ability(object):
-        def __init__(self, name, description):
-            self.name = name
-            self.description = description
-    with open(filename) as csvfile:
-        reader = csv.DictReader(csvfile)
-        for row in reader:
-            abilities[row["Name"]] = Ability(row["Name"], row["Description"])
-    return abilities
+class Record(object):
+    """
+    A record that can parse itself from a row and add itself to a table.
+    """
+
+    def __init__(self):
+        pass
+
+    def parse(self, row, table):
+        """
+        This should read data from the row into the record
+        and add it to the table (which should be a dict-like object mapping
+        record identifiers to records.)
+
+        :param row: Row to parse from.
+        :param table: Table to add to.
+        """
+        pass
 
 
-def read_models(filename):
-    """ Read all of the models into a table. """
+class BasicRecord(Record):
+    """
+    A simple record identified by its name.
+    """
 
-    # Store models in 'document order'.
-    models = collections.OrderedDict()
+    def __init__(self):
+        Record.__init__(self)
+        self.name = ""
 
-    # Represents a model.
-    class Model(object):
-        def __init__(self, name, cost):
-            self.name = name
-            self.cost = cost
-            self.stats = collections.OrderedDict()
-            self.abilities = []
-            self.damage_variants = []
-            self.includes_wargear = False
-
-    # Read in each model definition from the file.
-    with open(filename) as csvfile:
-        reader = csv.DictReader(csvfile)
-        for row in reader:
-
-            # Read in the model from the table row.
-            name = row["Name"]
-            cost = int(row["Cost"])
-            model = Model(name, cost)
-            stats = ["Name", "Cost", "M", "WS", "BS", "S", "T", "W", "A", "Ld", "Sv"]
-            for stat in stats:
-                model.stats[stat] = row[stat]
-            model.abilities = [x.strip() for x in row["Abilities"].split("|")]
-
-            # Some models include the price of their wargear.
-            includes_wargear = row["IncludesWargear"]
-            if len(includes_wargear) != 0 and int(includes_wargear)!=0:
-                model.includes_wargear = True
-
-            # The model might actually be a damage variant of another model.  If
-            # it is, then add it to the base model's list.
-            pattern = "(.*)\\(([0-9]+)W\\)"
-            match = re.match(pattern, name)
-            if match:
-                base_name = match.group(1).strip()
-                threshold = int(match.group(2))
-                models[base_name].damage_variants.append((threshold, model))
-            else:
-                models[name] = model
-
-    # Done!
-    return models
+    def parse(self, row, table):
+        self.name = row["Name"]
+        table[self.name] = self
 
 
-def read_psykers(filename):
-    """ Read in table of models with psychic powers. """
+class Ability(BasicRecord):
 
-    class Psyker(object):
-        def __init__(self, name):
-            self.name = name
-            self.powers_per_turn = 0
-            self.deny_per_turn = 0
-            self.num_known_powers = 0
-            self.discipline = None
+    def __init__(self):
+        BasicRecord.__init__(self)
+        self.description = ""
 
-    # Read in each psyker definition from the file.
-    psykers = collections.OrderedDict()
-    with open(filename) as csvfile:
-        reader = csv.DictReader(csvfile)
-        for row in reader:
-            psyker = Psyker(row["Name"])
-            psyker.powers_per_turn = int(row["PowersPerTurn"])
-            psyker.deny_per_turn = int(row["DenyPerTurn"])
-            psyker.num_known_powers = int(row["NumKnownPowers"])
-            psyker.discipline = row["Discipline"]
-            psykers[row["Name"]] = psyker
-
-    return psykers
+    def parse(self, row, table):
+        BasicRecord.parse(self, row, table)
+        self.description = row["Description"]
 
 
-def read_weapons(filename):
-    """ Read all of the weapons into a table. """
+class Model(Record):
+    """
+    Model record.
 
-    # We want weapons in 'document order'.
-    weapons = collections.OrderedDict()
+    Models are special in that they can have a list of 'damage variant' records
+    nested inside them. These have names like "Robot (10W)", where the trailing
+    "(10W)" denotes a damage variant that kicks in at 10 wounds for the "Robot"
+    model.
 
-    # Represents a weapon. Should always be accessed via 'modes()'.
-    class Weapon(object):
-        def __init__(self, name , cost):
-            self.name = name
-            self.cost = cost
-            self.stats = collections.OrderedDict()
-            self.stats["Name"] = name
-            self.stats["Cost"] = cost
-            self.modes = []
-            self.abilities = []
-        def get_modes(self):
-            if len(self.modes) > 0:
-                return self.modes
-            else:
-                return [self]
+    Variants are not included in the table directly, they are accessible only
+    through the base model, which must be read in first.
+    """
 
-    # Read in the weapons table.
-    with open(filename) as csvfile:
-        reader = csv.DictReader(csvfile)
-        for row in reader:
+    def __init__(self):
+        Record.__init__(self)
+        self.name = ""
+        self.cost = 0
+        self.stats = collections.OrderedDict()
+        self.abilities = []
+        self.damage_variants = []
+        self.includes_wargear = False
 
-            # Read in the weapon from the table row.
-            name = row["Name"]
-            cost = int(row["Cost"])
-            weapon = Weapon(name, cost)
-            stats = ["Name", "Cost", "Range", "Type", "S", "AP", "D"]
-            for stat in stats:
-                weapon.stats[stat] = row[stat]
+    def parse(self, row, table):
 
-            # Weapons with different firing modes have the modes grouped
-            # together as separate 'weapons' under a dummy base weapon entry.
-            pattern = "(.*)\\[.*\\]"
-            match = re.match(pattern, name)
-            if match:
-                base_name = match.group(1).strip()
-                if not base_name in weapons:
-                    weapons[base_name] = Weapon(base_name, cost)
-                weapons[base_name].modes.append(weapon)
-            else:
-                weapons[name] = weapon
+        # Read name and cost.
+        self.name = row["Name"]
+        self.cost = int(row["Cost"])
 
-            # Extract the abilities
-            weapon.abilities = [x.strip() for x in row["Abilities"].split("|")]
-            if "" in weapon.abilities: weapon.abilities.remove("")
+        # Read in the model from the table row.
+        stats = ["Name", "Cost", "M", "WS", "BS", "S", "T", "W", "A", "Ld",
+                 "Sv"]
+        for stat in stats:
+            self.stats[stat] = row[stat]
+        self.abilities = [x.strip() for x in row["Abilities"].split("|")]
 
-            # Add a string representing the abilities to the stats map.
-            abilities_str = ", ".join(weapon.abilities)
-            if len(abilities_str) == 0: abilities_str = "-"
-            weapon.stats["Abilities"] = abilities_str
+        # Some models include the price of their wargear.
+        includes_wargear = row["IncludesWargear"]
+        if len(includes_wargear) != 0 and int(includes_wargear) != 0:
+            self.includes_wargear = True
 
-    # Phew, we're done.
-    return weapons
+        # The model might actually be a damage variant of another model.  If
+        # it is, then add it to the base model's list.
+        pattern = "(.*)\\(([0-9]+)W\\)"
+        match = re.match(pattern, self.name)
+        if match:
+            base_name = match.group(1).strip()
+            threshold = int(match.group(2))
+            table[base_name].damage_variants.append((threshold, self))
+        else:
+            table[self.name] = self
 
 
-def read_wargear(filename):
-    """ Read all of the wargear into a table. """
-    wargear = collections.OrderedDict()
-    class Wargear(object):
-        def __init__(self, row):
-            self.name = row["Name"]
-            self.cost = int(row["Cost"])
-            self.abilities = [x.strip() for x in row["Abilities"].split("|")]
-    with open(filename) as csvfile:
-        reader = csv.DictReader(csvfile)
-        for row in reader:
-            wargear[row["Name"]] = Wargear(row)
-    return wargear
+class Psyker(BasicRecord):
+
+    def __init__(self):
+        BasicRecord.__init__(self)
+        self.powers_per_turn = 0
+        self.deny_per_turn = 0
+        self.num_known_powers = 0
+        self.discipline = ""
+
+    def parse(self, row, table):
+        BasicRecord.parse(self, row, table)
+        self.powers_per_turn = int(row["PowersPerTurn"])
+        self.deny_per_turn = int(row["DenyPerTurn"])
+        self.num_known_powers = int(row["NumKnownPowers"])
+        self.discipline = row["Discipline"]
 
 
-def read_formations(filename):
-    """ Read all of the formations into a table. """
-    formations = collections.OrderedDict()
-    class Formation(object):
-        def __init__(self, row):
-            self.name = row["Name"]
-            self.cp = int(row["CP"])
-            self.slots = collections.OrderedDict()
-            for slot in ("HQ", "Troops", "Fast Attack", "Elites", "Heavy Support"):
-                min, max = row[slot].split("-")
-                self.slots[slot] = (int(min), int(max))
-            self.transports_ratio = row["Transports"]
-    with open(filename) as csvfile:
-        reader = csv.DictReader(csvfile)
-        for row in reader:
-            formations[row["Name"]] = Formation(row)
-    return formations
+class Weapon(Record):
+    """
+    Weapon record.
+
+    Weapons are a bit like models in that there can be a number of alternate
+    profiles associated with a weapon name, but they are subtly different and a
+    little more complicated.
+
+    Assuming we encounter the weapon 'Missile Launcher [Krak]' in a row, and we
+    have not yet encountered a missile launcher variant, then the following
+    will end up in the table
+
+    {
+        ...,
+        "Missile Launcher" : Weapon("Missile Launcher", <cost>)
+    }
+
+    and that weapon, in its 'modes' field, will have
+
+    [
+        Weapon("Missile Launcher [Krak]", <cost>)
+    ]
+
+    and that (child) weapon will have the actual weapon profile. Subsequently
+    if we encounter "Missile Launcher [Frag]" in a row, nothing is added to the
+    table but we lookup the "Missile Launcher" record and add a new profile to
+    it:
+
+    [
+        Weapon("Missile Launcher [Krak]", <cost>),
+        Weapon("Missile Launcher [Frag]", <cost>)
+    ]
+
+    On the other hand, a Weapon without multiple modes will appear in the table
+    as a normal record.
+
+    {
+        "Bolt Pistol": Weapon(...),   # this is the real record
+    }
+
+    When looking up a weapon, one should always call get_modes() on it to
+    ensure you're looking at the real record(s) and not a dummy base weapon.
+    """
+
+    def __init__(self, name="", cost=0):
+        Record.__init__(self)
+        self.name = name
+        self.cost = cost
+        self.stats = collections.OrderedDict()
+        self.stats["Name"] = self.name
+        self.stats["Cost"] = self.cost
+        self.modes = []
+        self.abilities = []
+
+    def parse(self, row, table):
+
+        # Read name and cost.
+        self.name = row["Name"]
+        self.cost = int(row["Cost"])
+
+        # Read stats
+        stats = ["Name", "Cost", "Range", "Type", "S", "AP", "D"]
+        for stat in stats:
+            self.stats[stat] = row[stat]
+
+        # Extract the abilities
+        self.abilities = [x.strip() for x in row["Abilities"].split("|")]
+        if "" in self.abilities: self.abilities.remove("")
+
+        # Add a string representing the abilities to the stats map.
+        abilities_str = ", ".join(self.abilities)
+        if len(abilities_str) == 0: abilities_str = "-"
+        self.stats["Abilities"] = abilities_str
+
+        # Weapons with different firing modes have the modes grouped
+        # together as separate 'weapons' under a dummy base weapon entry.
+        pattern = "(.*)\\[.*\\]"
+        match = re.match(pattern, self.name)
+        if match:
+            base_name = match.group(1).strip()
+            if not base_name in table:
+                table[base_name] = Weapon(base_name, self.cost)
+            table[base_name].modes.append(self)
+        else:
+            table[self.name] = self
+
+    def get_modes(self):
+        if len(self.modes) > 0:
+            return self.modes
+        else:
+            return [self]
 
 
-def read_backgrounds(filename):
-    backgrounds = collections.OrderedDict()
-    class Background(object):
-        def __init__(self, row):
-            self.name = row["Name"]
-    with open(filename) as csvfile:
-        reader = csv.DictReader(csvfile)
-        for row in reader:
-            backgrounds[row["Name"]] = Background(row)
-    return backgrounds
+class Wargear(BasicRecord):
+
+    def __init__(self):
+        BasicRecord.__init__(self)
+        self.cost = 0
+        self.abilities = []
+
+    def parse(self, row, table):
+        BasicRecord.parse(self, row, table)
+        self.cost = int(row["Cost"])
+        self.abilities = [x.strip() for x in row["Abilities"].split("|")]
 
 
-def read_quirks(filename):
-    quirks = collections.OrderedDict()
-    class Quirk(object):
-        def __init__(self, row):
-            self.name = row["Name"]
-    with open(filename) as csvfile:
-        reader = csv.DictReader(csvfile)
-        for row in reader:
-            quirks[row["Name"]] = Quirk(row)
-    return quirks
+class Formation(BasicRecord):
+
+    def __init__(self):
+        BasicRecord.__init__(self)
+        self.cp = 0
+        self.slots = collections.OrderedDict()
+        self.transports_ratio = ""
+
+    def parse(self, row, table):
+        BasicRecord.parse(self, row, table)
+        self.cp = int(row["CP"])
+        for slot in ("HQ", "Troops", "Fast Attack", "Elites", "Heavy Support"):
+            min, max = row[slot].split("-")
+            self.slots[slot] = (int(min), int(max))
+        self.transports_ratio = row["Transports"]
 
 
-def read_demeanours(filename):
-    demeanours = collections.OrderedDict()
-    class Demeanour(object):
-        def __init__(self, row):
-            self.name = row["Name"]
-    with open(filename) as csvfile:
-        reader = csv.DictReader(csvfile)
-        for row in reader:
-            demeanours[row["Name"]] = Demeanour(row)
-    return demeanours
+class Background(BasicRecord):
+    pass
+
+
+class Quirk(BasicRecord):
+    pass
+
+
+class Demeanour(BasicRecord):
+    pass
 
 
 def read_armies(dirname):
@@ -242,27 +273,43 @@ def read_armies(dirname):
     return armies
 
 
+def read_table(data_dir, basename, create_record):
+    """
+    Read a table of records and return it.
+    :param data_dir: Path to data directory.
+    :param basename: Basename of .csv file to read.
+    :param create_record: Record creation function. This should return an empty
+                          record of an appropriate type for parsing a row of
+                          this table.
+    :return: The table of records.
+    """
+    filename = os.path.join(data_dir, basename+".csv")
+    table = collections.OrderedDict()
+    with open(filename) as csvfile:
+        reader = csv.DictReader(csvfile)
+        for row in reader:
+            record = create_record()
+            record.parse(row, table)
+    return table
+
+
 class Database(object):
     def __init__(self, game, data_dir):
         self.__game = game
         data_dir = os.path.join(data_dir, game.lower().replace(" ", "-"))
-        self.__weapons = read_weapons(os.path.join(data_dir, "weapons.csv"))
-        self.__wargear = read_wargear(os.path.join(data_dir, "wargear.csv"))
-        self.__models = read_models(os.path.join(data_dir, "models.csv"))
-        self.__formations = read_formations(
-            os.path.join(data_dir, "formations.csv"))
-        self.__abilities = read_abilities(
-            os.path.join(data_dir, "abilities.csv"))
-        self.__psykers = read_psykers(os.path.join(data_dir, "psykers.csv"))
+        self.__weapons = read_table(data_dir, "weapons", Weapon)
+        self.__wargear = read_table(data_dir, "wargear", Wargear)
+        self.__models = read_table(data_dir, "models", Model)
+        self.__formations = read_table(data_dir, "formations", Formation)
+        self.__abilities = read_table(data_dir, "abilities", Ability)
+        self.__psykers = read_table(data_dir, "psykers", Psyker)
         self.__demeanours = {}
         self.__backgrounds = {}
         self.__quirks = {}
         if self.is_kill_team:
-            self.__demeanours = read_demeanours(
-                os.path.join(data_dir, "demeanours.csv"))
-            self.__quirks = read_quirks(os.path.join(data_dir, "quirks.csv"))
-            self.__backgrounds = read_backgrounds(
-                os.path.join(data_dir, "backgrounds.csv"))
+            self.__demeanours = read_table(data_dir, "demeanours", Demeanour)
+            self.__quirks = read_table(data_dir, "quirks", Quirk)
+            self.__backgrounds = read_table(data_dir, "backgrounds", Background)
         self.__costs = {}
         self.__costs.update(self.__weapons)
         self.__costs.update(self.__models)
