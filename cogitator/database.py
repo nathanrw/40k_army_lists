@@ -272,10 +272,6 @@ class Database(object):
     def is_kill_team(self):
         return self.__game == "Kill Team"
 
-    @property
-    def psykers(self):
-        return self.__psykers
-
     def lookup_item(self, item):
         """ Lookup an item in the costs table. """
         try:
@@ -298,12 +294,14 @@ class Database(object):
         except KeyError:
             print ("No ability '%s' in abilities table." % ability)
 
-    def lookup_psyker(self, model_name):
+    def lookup_psyker(self, model_name, **kwargs):
         """ If a model is a psyker lookup its psychic powers. """
+        quiet = kwargs.get("quiet", False)
         try:
             return self.__psykers[model_name]
         except KeyError:
-            print ("Model '%s' is not a psyker." % model_name)
+            if not quiet:
+                print ("Model '%s' is not a psyker." % model_name)
 
     def lookup_quirk(self, name):
         """ Lookup a quirk. """

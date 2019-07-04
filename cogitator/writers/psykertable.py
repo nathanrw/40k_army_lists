@@ -13,12 +13,10 @@ class PsykerTableWriter(object):
     def write_psyker_table(self, outfile, model_name):
         """ Write out psyker info if necessary. """
 
-        # If the model is not a psyker we don't need to write the table!
-        if not model_name in self.database.psykers:
-            return
-
         # Get the psyker stats.
-        psyker = self.database.lookup_psyker(model_name)
+        psyker = self.database.lookup_psyker(model_name, quiet=True)
+        if psyker is None:
+            return
 
         # Write the table.
         tup = (psyker.powers_per_turn, psyker.deny_per_turn,
