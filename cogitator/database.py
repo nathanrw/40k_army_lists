@@ -31,6 +31,13 @@ class Record(object):
         """
         pass
 
+    def table_name(self):
+        """
+        Get a filename for the table.
+        :return: The filename.
+        """
+        return self.__class__.__name__.lower() + "s"
+
 
 class BasicRecord(Record):
     """
@@ -55,6 +62,9 @@ class Ability(BasicRecord):
     def parse(self, row, table):
         BasicRecord.parse(self, row, table)
         self.description = row["Description"]
+
+    def table_name(self):
+        return "abilities"
 
 
 class Model(Record):
@@ -231,6 +241,9 @@ class Wargear(BasicRecord):
         self.cost = int(row["Cost"])
         self.abilities = [x.strip() for x in row["Abilities"].split("|")]
 
+    def table_name(self):
+        return "wargear"
+
 
 class Formation(BasicRecord):
 
@@ -273,7 +286,7 @@ def read_armies(dirname):
     return armies
 
 
-def read_table(data_dir, basename, create_record):
+def read_table(data_dir, create_record):
     """
     Read a table of records and return it.
     :param data_dir: Path to data directory.
@@ -283,6 +296,7 @@ def read_table(data_dir, basename, create_record):
                           this table.
     :return: The table of records.
     """
+    basename = create_record().table_name()
     filename = os.path.join(data_dir, basename+".csv")
     table = collections.OrderedDict()
     with open(filename) as csvfile:
@@ -297,19 +311,19 @@ class Database(object):
     def __init__(self, game, data_dir):
         self.__game = game
         data_dir = os.path.join(data_dir, game.lower().replace(" ", "-"))
-        self.__weapons = read_table(data_dir, "weapons", Weapon)
-        self.__wargear = read_table(data_dir, "wargear", Wargear)
-        self.__models = read_table(data_dir, "models", Model)
-        self.__formations = read_table(data_dir, "formations", Formation)
-        self.__abilities = read_table(data_dir, "abilities", Ability)
-        self.__psykers = read_table(data_dir, "psykers", Psyker)
+        self.__weapons = read_table(data_dir, Weapon)
+        self.__wargear = read_table(data_dir, Wargear)
+        self.__models = read_table(data_dir, Model)
+        self.__formations = read_table(data_dir, Formation)
+        self.__abilities = read_table(data_dir, Ability)
+        self.__psykers = read_table(data_dir, Psyker)
         self.__demeanours = {}
         self.__backgrounds = {}
         self.__quirks = {}
         if self.is_kill_team:
-            self.__demeanours = read_table(data_dir, "demeanours", Demeanour)
-            self.__quirks = read_table(data_dir, "quirks", Quirk)
-            self.__backgrounds = read_table(data_dir, "backgrounds", Background)
+            self.__demeanours = read_table(data_dir, Demeanour)
+            self.__quirks = read_table(data_dir, Quirk)
+            self.__backgrounds = read_table(data_dir, Background)
         self.__costs = {}
         self.__costs.update(self.__weapons)
         self.__costs.update(self.__models)
